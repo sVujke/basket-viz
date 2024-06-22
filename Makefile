@@ -76,6 +76,12 @@ endif
 test_environment:
 	$(PYTHON_INTERPRETER) test_environment.py
 
+## Create an IPython kernel for the virtual environment
+create_kernel:
+	@$(PYTHON_INTERPRETER) -m pip install ipykernel
+	@$(PYTHON_INTERPRETER) -m ipykernel install --user --name=$(PROJECT_NAME) --display-name="Python ($(PROJECT_NAME))"
+	@echo "IPython kernel named '$(PROJECT_NAME)' created. It can be selected in Jupyter interfaces."
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
