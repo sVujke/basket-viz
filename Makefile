@@ -82,6 +82,25 @@ create_kernel:
 	@$(PYTHON_INTERPRETER) -m ipykernel install --user --name=$(PROJECT_NAME) --display-name="Python ($(PROJECT_NAME))"
 	@echo "IPython kernel named '$(PROJECT_NAME)' created. It can be selected in Jupyter interfaces."
 
+
+.PHONY: clean build upload reinstall
+
+PACKAGE_NAME=basket-viz
+
+clean_package:
+	rm -rf dist
+	rm -rf build
+	rm -rf *.egg-info
+
+build_package: clean_package
+	python setup.py sdist bdist_wheel
+
+upload_package: build_package
+	twine upload dist/* -u 
+
+republish: upload_package
+
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
