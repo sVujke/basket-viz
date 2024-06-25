@@ -96,9 +96,13 @@ build_package: clean_package
 	python setup.py sdist bdist_wheel
 
 upload_package: build_package
-	twine upload dist/* -u 
+	twine upload dist/* --verbose
 
 republish: upload_package
+
+reinstall:
+	pip uninstall -y $(PACKAGE_NAME)
+	pip install $(PACKAGE_NAME)
 
 
 #################################################################################
