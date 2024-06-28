@@ -2,10 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Circle, Rectangle, Arc
 import pandas as pd
 import matplotlib.animation as animation
-
-import matplotlib.pyplot as plt
-from matplotlib.patches import Circle, Rectangle, Arc
-import pandas as pd
+import os
 
 
 class ShotChart:
@@ -13,6 +10,7 @@ class ShotChart:
         default_config = {
             "color_map": {"made": "#66B2FF", "miss": "#FF6F61"},
             "marker_size": 10,
+            "marker_style": {"made": "o", "miss": "x"},
             "figsize": (10, 7),
             "court_line_color": "black",
             "line_width": 1,
@@ -21,8 +19,16 @@ class ShotChart:
             "plot_shots": "all",  # options: 'all', 'made', 'miss'
             "coord_x": "COORD_X",
             "coord_y": "COORD_Y",
+            "sort_col": "UTC",
+            "animation_interval": 100,
+            "animation_repeat_delay": 1000,
+            "animation_blit": True,
         }
+
         self.config = {**default_config, **(config or {})}
+
+        self.fig = None
+        self.ani = None
 
     def set_config_param(self, **kwargs):
         for key, value in kwargs.items():
@@ -84,6 +90,9 @@ class ShotChart:
         ax.set_ylim([-200, 1300])
         if title:
             ax.set_title(title)
+
+        self.fig = fig
+        self.ani = None
         plt.show()
 
     def _create_court_elements(self):
@@ -193,60 +202,129 @@ class ShotChart:
         )
 
     # TODO
-    # refactor field_goal_scatter_temporal to use the config
-    # add euroleague wraper to plot player or team shots
-    # add output settings
+    # refactor field_goal_scatter_temporal to use the config [x]
+    # add euroleague wraper to plot player or team shots [x]
+    # add output settings [x]
+    # add getter for config
+    # add team configs
+    # refactor temporal to work both with mp4 and gif
+    # refactor the config - separate court, marker, title elements
 
-    def plot_field_goal_scatter_temporal(
-        self, made, miss, title=None, gif_path="shots.gif"
-    ):
+    def plot_field_goal_scatter_temporal(self, made, miss, title=None):
         made["Result"] = "Made"
         miss["Result"] = "Missed"
         shots = pd.concat([made, miss])
-        shots.sort_values(by="UTC", inplace=True)
+        shots.sort_values(by=self.config["sort_col"], inplace=True)
 
-        fig, ax = plt.subplots(figsize=self.figsize)
+        fig, ax = plt.subplots(figsize=self.config["figsize"])
+        fig.patch.set_facecolor(self.config["court_background_color"])
         self.draw_court(ax)
         plt.xlim([-800, 800])
         plt.ylim([-200, 1300])
-        plt.title(title)
+        if title:
+            plt.title(title)
 
         made_shots_x, made_shots_y = [], []
         missed_shots_x, missed_shots_y = [], []
         ims = []
 
+        coord_x = self.config["coord_x"]
+        coord_y = self.config["coord_y"]
+        marker_style_made = self.config["marker_style"]["made"]
+        marker_style_miss = self.config["marker_style"]["miss"]
+
         for _, shot in shots.iterrows():
             if shot["Result"] == "Made":
-                made_shots_x.append(shot["COORD_X"])
-                made_shots_y.append(shot["COORD_Y"])
+                made_shots_x.append(shot[coord_x])
+                made_shots_y.append(shot[coord_y])
             else:
-                missed_shots_x.append(shot["COORD_X"])
-                missed_shots_y.append(shot["COORD_Y"])
+                missed_shots_x.append(shot[coord_x])
+                missed_shots_y.append(shot[coord_y])
 
             im = ax.plot(
                 made_shots_x,
                 made_shots_y,
-                "o",
-                color=self.color_map["made"],
-                markersize=self.marker_size,
+                marker_style_made,
+                color=self.config["color_map"]["made"],
+                markersize=self.config["marker_size"],
                 label="Made",
             )
             im += ax.plot(
                 missed_shots_x,
                 missed_shots_y,
-                "x",
-                color=self.color_map["miss"],
+                marker_style_miss,
+                color=self.config["color_map"]["miss"],
                 markerfacecolor="none",
-                markersize=self.marker_size,
+                markersize=self.config["marker_size"],
                 label="Missed",
             )
             ims.append(im)
 
-        ani = animation.ArtistAnimation(
-            fig, ims, interval=100, blit=True, repeat_delay=1000
-        )
-        ani.save(gif_path, writer="pillow")
-        plt.show()
+            self.ani = animation.ArtistAnimation(
+                fig,
+                ims,
+                interval=self.config["animation_interval"],
+                blit=self.config["animation_blit"],
+                repeat_delay=self.config["animation_repeat_delay"],
+            )
+            self.fig = fig  # Store the figure in the object
+            plt.show()
+
+    def save_plot(self, directory="output", file_name="shot_chart", file_format=None):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        if self.ani is not None:
+            if file_format is None:
+                file_format = "mp4"
+            full_path = os.path.join(directory, f"{file_name}.{file_format}")
+            if file_format == "gif":
+                self.ani.save(full_path, writer="pillow")
+            elif file_format == "mp4":
+                self.ani.save(full_path, writer="ffmpeg")
+            else:
+                raise ValueError(
+                    f"Unsupported file format for animation: {file_format}"
+                )
+            print(f"Saved animation to {full_path}")
+
+        elif self.fig is not None and self.ani is None:
+            if file_format is None:
+                file_format = "png"
+            full_path = os.path.join(directory, f"{file_name}.{file_format}")
+            self.fig.savefig(full_path)
+            print(f"Saved figure to {full_path}")
+
+        else:
+            raise ValueError("No plot or animation available to save.")
+
+    def get_fg_made_miss(self, df, player_name=None, team_name=None, game_id=None):
+        if player_name:
+            df = df[df["PLAYER"] == player_name]
+        if team_name:
+            df = df[df["TEAM"] == team_name]
+        if game_id:
+            df = df[df["GAME_ID"] == game_id]
+
+        fg_made = df[df["ID_ACTION"].isin(["2FGM", "3FGM"])]
+        fg_miss = df[df["ID_ACTION"].isin(["2FGA", "3FGA"])]
+        return fg_made, fg_miss
+
+    def euroleague_player_shot_chart(
+        self,
+        df,
+        player_name=None,
+        team_name=None,
+        game_id=None,
+        temporal=False,
+        title=None,
+    ):
+        fg_made, fg_miss = self.get_fg_made_miss(df, player_name, team_name, game_id)
+
+        if temporal:
+            self.plot_field_goal_scatter_temporal(fg_made, fg_miss, title=title)
+        else:
+            self.plot_field_goal_scatter(fg_made, fg_miss, title=title)
 
 
 # Example usage
