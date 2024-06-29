@@ -2,11 +2,13 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Circle, Rectangle, Arc
 import pandas as pd
 import matplotlib.animation as animation
+from IPython.display import HTML
 import os
+from basket_viz.court.euroleague_team_configs import team_configs
 
 
 class ShotChart:
-    def __init__(self, config=None):
+    def __init__(self, config=None, use_team_config=None):
         default_config = {
             "color_map": {"made": "#66B2FF", "miss": "#FF6F61"},
             "marker_size": 10,
@@ -25,7 +27,11 @@ class ShotChart:
             "animation_blit": True,
         }
 
-        self.config = {**default_config, **(config or {})}
+        if use_team_config and use_team_config in team_configs:
+            team_config = team_configs[use_team_config]
+            self.config = {**default_config, **team_config, **(config or {})}
+        else:
+            self.config = {**default_config, **(config or {})}
 
         self.fig = None
         self.ani = None
@@ -38,6 +44,9 @@ class ShotChart:
                 raise KeyError(
                     f"Config parameter '{key}' is not a valid config option."
                 )
+
+    def get_config(self):
+        return self.config
 
     def draw_court(self, ax=None):
         if ax is None:
@@ -205,10 +214,13 @@ class ShotChart:
     # refactor field_goal_scatter_temporal to use the config [x]
     # add euroleague wraper to plot player or team shots [x]
     # add output settings [x]
-    # add getter for config
-    # add team configs
-    # refactor temporal to work both with mp4 and gif
+    # add getter for config [x]
+    # add team configs [x]
+    # refactor temporal to work both with mp4 and gif [x]
     # refactor the config - separate court, marker, title elements
+    # add docstrings
+    # add type hints
+    # add display animation in jupyter notebook [x]
 
     def plot_field_goal_scatter_temporal(self, made, miss, title=None):
         made["Result"] = "Made"
@@ -268,7 +280,12 @@ class ShotChart:
                 repeat_delay=self.config["animation_repeat_delay"],
             )
             self.fig = fig  # Store the figure in the object
-            plt.show()
+
+    def show_animation(self):
+        if self.ani is not None:
+            return HTML(self.ani.to_jshtml())
+        else:
+            raise ValueError("No animation available to show.")
 
     def save_plot(self, directory="output", file_name="shot_chart", file_format=None):
         if not os.path.exists(directory):
