@@ -5,6 +5,8 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 import os
 from basket_viz.court.euroleague_team_configs import team_configs
+from matplotlib.colors import LinearSegmentedColormap
+import seaborn as sns
 
 
 class ShotChart:
@@ -342,6 +344,79 @@ class ShotChart:
             self.plot_field_goal_scatter_temporal(fg_made, fg_miss, title=title)
         else:
             self.plot_field_goal_scatter(fg_made, fg_miss, title=title)
+
+    # def plot_field_goal_heatmap(
+    #     self, shots_df, title=None, cmap=plt.cm.gist_heat_r, gridsize=15
+    # ):
+    #     joint_shot_chart = sns.jointplot(
+    #         x=shots_df[self.config["coord_x"]],
+    #         y=shots_df[self.config["coord_y"]],
+    #         kind="hex",
+    #         space=0,
+    #         color=cmap(0.2),
+    #         cmap=cmap,
+    #         joint_kws={"gridsize": gridsize},
+    #     )
+    #     ax = joint_shot_chart.ax_joint
+    #     self.draw_court(ax)
+    #     ax.set_xlim([-800, 800])
+    #     ax.set_ylim([-200, 1300])
+    #     if title:
+    #         ax.set_title(title)
+    #     plt.show()
+
+    def plot_field_goal_heatmap(
+        self,
+        shots_df,
+        title=None,
+        cmap=plt.cm.gist_heat_r,
+        gridsize=15,
+        custom_cmap=None,
+    ):
+        # Create a JointGrid
+        joint_shot_chart = sns.JointGrid(
+            x=shots_df[self.config["coord_x"]],
+            y=shots_df[self.config["coord_y"]],
+            data=shots_df,
+        )
+
+        joint_shot_chart.figure.set_size_inches(self.config["figsize"])
+
+        if custom_cmap is None:
+            # Define a default custom colormap
+            colors = [
+                (1, 1, 1),
+                (1, 0, 0),
+                (1, 0.5, 0),
+                (1, 1, 0),
+                (0.5, 1, 0),
+                (0, 1, 0),
+            ]  # Red -> Orange -> Yellow -> Light Green -> Green
+            custom_cmap = LinearSegmentedColormap.from_list(
+                "custom_cmap", colors, N=256
+            )
+
+        # Plot the hexbin plot on the JointGrid
+        joint_shot_chart = joint_shot_chart.plot_joint(
+            plt.hexbin,
+            gridsize=gridsize,
+            cmap=custom_cmap,
+            extent=(-800, 800, -200, 1300),
+        )
+
+        # Set limits and add court
+        ax = joint_shot_chart.ax_joint
+        self.draw_court(ax)
+        ax.set_xlim([-800, 800])
+        ax.set_ylim([-200, 1300])
+
+        joint_shot_chart.ax_marg_x.remove()
+        joint_shot_chart.ax_marg_y.remove()
+
+        if title:
+            ax.set_title(title)
+
+        plt.show()
 
 
 # Example usage
