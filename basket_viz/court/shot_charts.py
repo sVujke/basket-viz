@@ -382,6 +382,17 @@ class ShotChart:
     def get_hexbins_ratio(self, hexbin_numerator, hexbin_denominator):
         return hexbin_numerator.get_array() / hexbin_denominator.get_array()
 
+    def create_custom_cmap(self):
+        colors = [
+            (1, 1, 1),
+            (0.8, 1, 0.8),
+            (0.6, 1, 0.6),
+            (0.4, 1, 0.4),
+            (0.2, 1, 0.2),
+            (0, 1, 0),
+        ]
+        return LinearSegmentedColormap.from_list("custom_cmap", colors, N=256)
+
     def plot_field_goal_heatmap(
         self,
         shots_df,
@@ -389,111 +400,26 @@ class ShotChart:
         cmap=plt.cm.gist_heat_r,
         gridsize=15,
         custom_cmap=None,
+        sized=False,
     ):
-        # Create a JointGrid
-        joint_shot_chart = sns.JointGrid(
-            x=shots_df[self.config["coord_x"]],
-            y=shots_df[self.config["coord_y"]],
-            data=shots_df,
-        )
+        if custom_cmap is not None:
+            cmap = custom_cmap
 
-        joint_shot_chart.figure.set_size_inches(self.config["figsize"])
-
-        if custom_cmap is None:
-            # Define a default custom colormap
-            # Define a custom colormap
-            colors = [
-                (1, 1, 1),
-                (0.8, 1, 0.8),
-                (0.6, 1, 0.6),
-                (0.4, 1, 0.4),
-                (0.2, 1, 0.2),
-                (0, 1, 0),
-            ]  # White -> Light green -> Darker green
-            custom_cmap = LinearSegmentedColormap.from_list(
-                "custom_cmap", colors, N=256
-            )
-
-        # Plot the hexbin plot on the JointGrid
-        joint_shot_chart = joint_shot_chart.plot_joint(
-            plt.hexbin,
-            gridsize=gridsize,
-            cmap=custom_cmap,
-            extent=self.config["hexagon_extent"],
-        )
-
-        # Set limits and add court
-        ax = joint_shot_chart.ax_joint
-        self.draw_court(ax)
-        ax.set_xlim([-800, 800])
-        ax.set_ylim([-200, 1300])
-
-        joint_shot_chart.ax_marg_x.remove()
-        joint_shot_chart.ax_marg_y.remove()
-
-        if title:
-            ax.set_title(title)
-
-        plt.show()
-
-    def plot_field_goal_heatmap_sized(
-        self,
-        shots_df,
-        title=None,
-        gridsize=15,
-        custom_cmap=None,
-    ):
-        # Create a figure and axis
         fig, ax = plt.subplots(figsize=self.config["figsize"])
 
-        if custom_cmap is None:
-            # Define a default custom colormap
-            colors = [
-                (1, 1, 1),
-                (0.8, 1, 0.8),
-                (0.6, 1, 0.6),
-                (0.4, 1, 0.4),
-                (0.2, 1, 0.2),
-                (0, 1, 0),
-            ]  # White -> Light green -> Darker green
-            custom_cmap = LinearSegmentedColormap.from_list(
-                "custom_cmap", colors, N=256
-            )
-
-        # Create the hexbin plot
         hexbin = ax.hexbin(
             shots_df[self.config["coord_x"]],
             shots_df[self.config["coord_y"]],
             gridsize=gridsize,
-            cmap=custom_cmap,
+            cmap=cmap,
             extent=self.config["hexagon_extent"],
         )
-        # plt.close()  # Close the hexbin plot to avoid showing it
 
-        # Function to create sized hexbin
-        def sized_hexbin(ax, hc):
-            offsets = hc.get_offsets()
-            orgpath = hc.get_paths()[0]
-            verts = orgpath.vertices
-            values = hc.get_array()
-            ma = values.max()
-            patches = []
-            for offset, val in zip(offsets, values):
-                v1 = verts * val / ma + offset
-                path = Path(v1, orgpath.codes)
-                patch = PathPatch(path)
-                patches.append(patch)
+        if sized:
+            self.sized_hexbin(ax, hexbin)
+        else:
+            plt.colorbar(hexbin, ax=ax, label="Shot Frequency")
 
-            pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
-            pc.set_array(values)
-            ax.add_collection(pc)
-            hc.remove()
-
-        # Apply the sized hexbin function
-        sized_hexbin(ax, hexbin)
-        plt.colorbar(hexbin, ax=ax, label="Shot Frequency")
-
-        # Set limits and add court
         self.draw_court(ax)
         ax.set_xlim([-800, 800])
         ax.set_ylim([-200, 1300])
@@ -502,6 +428,25 @@ class ShotChart:
             ax.set_title(title)
 
         plt.show()
+
+    def sized_hexbin(self, ax, hc):
+        offsets = hc.get_offsets()
+        orgpath = hc.get_paths()[0]
+        verts = orgpath.vertices
+        values = hc.get_array()
+        ma = values.max()
+        patches = []
+
+        for offset, val in zip(offsets, values):
+            v1 = verts * val / ma + offset
+            path = Path(v1, orgpath.codes)
+            patch = PathPatch(path)
+            patches.append(patch)
+
+        pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
+        pc.set_array(values)
+        ax.add_collection(pc)
+        hc.remove()
 
 
 # Example usage
