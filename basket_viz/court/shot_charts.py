@@ -31,6 +31,11 @@ class ShotChart:
             "animation_repeat_delay": 1000,
             "animation_blit": True,
             "hexagon_extent": (-800, 800, -200, 1300),
+            "title": {
+                "fontsize": 15,
+                "fontweight": "bold",
+                "color": "black",
+            },
         }
 
         if use_team_config and use_team_config in team_configs:
@@ -103,8 +108,14 @@ class ShotChart:
         ax.legend(loc="upper right", bbox_to_anchor=(0.95, 0.95), prop={"size": 14})
         ax.set_xlim([-800, 800])
         ax.set_ylim([-200, 1300])
+
         if title:
-            ax.set_title(title)
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
 
         self.fig = fig
         self.ani = None
@@ -333,7 +344,7 @@ class ShotChart:
         fg_miss = df[df["ID_ACTION"].isin(["2FGA", "3FGA"])]
         return fg_made, fg_miss
 
-    def euroleague_player_shot_chart(
+    def euroleague_field_goal_dots(
         self,
         df,
         player_name=None,
@@ -349,38 +360,17 @@ class ShotChart:
         else:
             self.plot_field_goal_scatter(fg_made, fg_miss, title=title)
 
-    # def plot_field_goal_heatmap(
-    #     self, shots_df, title=None, cmap=plt.cm.gist_heat_r, gridsize=15
-    # ):
-    #     joint_shot_chart = sns.jointplot(
-    #         x=shots_df[self.config["coord_x"]],
-    #         y=shots_df[self.config["coord_y"]],
-    #         kind="hex",
-    #         space=0,
-    #         color=cmap(0.2),
-    #         cmap=cmap,
-    #         joint_kws={"gridsize": gridsize},
-    #     )
-    #     ax = joint_shot_chart.ax_joint
-    #     self.draw_court(ax)
-    #     ax.set_xlim([-800, 800])
-    #     ax.set_ylim([-200, 1300])
-    #     if title:
-    #         ax.set_title(title)
-    #     plt.show()
-
     def get_hexbin(self, data):
 
-        return plt.hexbin(
+        hc = plt.hexbin(
             data[self.coord_x],
             data[self.coord_y],
             gridsize=self.gridsize,
             extent=self.config["hexagon_extent"],
             mincnt=1,
         )
-
-    def get_hexbins_ratio(self, hexbin_numerator, hexbin_denominator):
-        return hexbin_numerator.get_array() / hexbin_denominator.get_array()
+        plt.close()
+        return hc
 
     def create_custom_cmap(self):
         colors = [
@@ -405,7 +395,7 @@ class ShotChart:
         if custom_cmap is not None:
             cmap = custom_cmap
 
-        fig, ax = plt.subplots(figsize=self.config["figsize"])
+        self.fig, ax = plt.subplots(figsize=self.config["figsize"])
 
         hexbin = ax.hexbin(
             shots_df[self.config["coord_x"]],
@@ -425,7 +415,12 @@ class ShotChart:
         ax.set_ylim([-200, 1300])
 
         if title:
-            ax.set_title(title)
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
 
         plt.show()
 
@@ -447,6 +442,34 @@ class ShotChart:
         pc.set_array(values)
         ax.add_collection(pc)
         hc.remove()
+
+    def euroleague_field_goal_heatmap(
+        self,
+        df,
+        player_name=None,
+        team_name=None,
+        game_id=None,
+        title=None,
+        gridsize=15,
+        custom_cmap=None,
+        sized=False,
+    ):
+        fg_made, fg_miss = self.get_fg_made_miss(df, player_name, team_name, game_id)
+
+        if self.config["plot_shots"] == "all":
+            shots_df = pd.concat([fg_made, fg_miss])
+        elif self.config["plot_shots"] == "made":
+            shots_df = fg_made
+        elif self.config["plot_shots"] == "miss":
+            shots_df = fg_miss
+
+        self.plot_field_goal_heatmap(
+            shots_df,
+            title=title,
+            gridsize=gridsize,
+            custom_cmap=custom_cmap,
+            sized=sized,
+        )
 
 
 # Example usage
