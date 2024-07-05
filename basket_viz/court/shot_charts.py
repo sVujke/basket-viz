@@ -5,6 +5,11 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 import os
 from basket_viz.court.euroleague_team_configs import team_configs
+from matplotlib.colors import LinearSegmentedColormap
+import seaborn as sns
+from matplotlib.patches import PathPatch
+from matplotlib.collections import PatchCollection
+from matplotlib.path import Path
 
 
 class ShotChart:
@@ -25,6 +30,12 @@ class ShotChart:
             "animation_interval": 100,
             "animation_repeat_delay": 1000,
             "animation_blit": True,
+            "hexagon_extent": (-800, 800, -200, 1300),
+            "title": {
+                "fontsize": 15,
+                "fontweight": "bold",
+                "color": "black",
+            },
         }
 
         if use_team_config and use_team_config in team_configs:
@@ -97,8 +108,14 @@ class ShotChart:
         ax.legend(loc="upper right", bbox_to_anchor=(0.95, 0.95), prop={"size": 14})
         ax.set_xlim([-800, 800])
         ax.set_ylim([-200, 1300])
+
         if title:
-            ax.set_title(title)
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
 
         self.fig = fig
         self.ani = None
@@ -327,7 +344,7 @@ class ShotChart:
         fg_miss = df[df["ID_ACTION"].isin(["2FGA", "3FGA"])]
         return fg_made, fg_miss
 
-    def euroleague_player_shot_chart(
+    def euroleague_field_goal_dots(
         self,
         df,
         player_name=None,
@@ -342,6 +359,117 @@ class ShotChart:
             self.plot_field_goal_scatter_temporal(fg_made, fg_miss, title=title)
         else:
             self.plot_field_goal_scatter(fg_made, fg_miss, title=title)
+
+    def get_hexbin(self, data):
+
+        hc = plt.hexbin(
+            data[self.coord_x],
+            data[self.coord_y],
+            gridsize=self.gridsize,
+            extent=self.config["hexagon_extent"],
+            mincnt=1,
+        )
+        plt.close()
+        return hc
+
+    def create_custom_cmap(self):
+        colors = [
+            (1, 1, 1),
+            (0.8, 1, 0.8),
+            (0.6, 1, 0.6),
+            (0.4, 1, 0.4),
+            (0.2, 1, 0.2),
+            (0, 1, 0),
+        ]
+        return LinearSegmentedColormap.from_list("custom_cmap", colors, N=256)
+
+    def plot_field_goal_heatmap(
+        self,
+        shots_df,
+        title=None,
+        cmap=plt.cm.gist_heat_r,
+        gridsize=15,
+        custom_cmap=None,
+        sized=False,
+    ):
+        if custom_cmap is not None:
+            cmap = custom_cmap
+
+        self.fig, ax = plt.subplots(figsize=self.config["figsize"])
+
+        hexbin = ax.hexbin(
+            shots_df[self.config["coord_x"]],
+            shots_df[self.config["coord_y"]],
+            gridsize=gridsize,
+            cmap=cmap,
+            extent=self.config["hexagon_extent"],
+        )
+
+        if sized:
+            self.sized_hexbin(ax, hexbin)
+        else:
+            plt.colorbar(hexbin, ax=ax, label="Shot Frequency")
+
+        self.draw_court(ax)
+        ax.set_xlim([-800, 800])
+        ax.set_ylim([-200, 1300])
+
+        if title:
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
+
+        plt.show()
+
+    def sized_hexbin(self, ax, hc):
+        offsets = hc.get_offsets()
+        orgpath = hc.get_paths()[0]
+        verts = orgpath.vertices
+        values = hc.get_array()
+        ma = values.max()
+        patches = []
+
+        for offset, val in zip(offsets, values):
+            v1 = verts * val / ma + offset
+            path = Path(v1, orgpath.codes)
+            patch = PathPatch(path)
+            patches.append(patch)
+
+        pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
+        pc.set_array(values)
+        ax.add_collection(pc)
+        hc.remove()
+
+    def euroleague_field_goal_heatmap(
+        self,
+        df,
+        player_name=None,
+        team_name=None,
+        game_id=None,
+        title=None,
+        gridsize=15,
+        custom_cmap=None,
+        sized=False,
+    ):
+        fg_made, fg_miss = self.get_fg_made_miss(df, player_name, team_name, game_id)
+
+        if self.config["plot_shots"] == "all":
+            shots_df = pd.concat([fg_made, fg_miss])
+        elif self.config["plot_shots"] == "made":
+            shots_df = fg_made
+        elif self.config["plot_shots"] == "miss":
+            shots_df = fg_miss
+
+        self.plot_field_goal_heatmap(
+            shots_df,
+            title=title,
+            gridsize=gridsize,
+            custom_cmap=custom_cmap,
+            sized=sized,
+        )
 
 
 # Example usage
