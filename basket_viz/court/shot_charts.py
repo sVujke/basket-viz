@@ -250,9 +250,14 @@ class ShotChart:
         self.draw_court(ax)
         plt.xlim([-800, 800])
         plt.ylim([-200, 1300])
-        if title:
-            plt.title(title)
 
+        if title:
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
         made_shots_x, made_shots_y = [], []
         missed_shots_x, missed_shots_y = [], []
         ims = []
