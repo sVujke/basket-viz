@@ -42,14 +42,18 @@ def create_smooth_line(x, y):
     return x_smooth, y_smooth
 
 
-def plot_player_trajectory(player_data, column, color, alpha=1.0, linewidth=1.5):
+def plot_player_trajectory(
+    player_data, column, color, alpha=1.0, linewidth=1.5, label=None
+):
     x = np.array([bin.mid for bin in player_data["BIN"]])
     y = player_data[column].values
 
     # Create smooth lines using spline interpolation
     x_smooth, y_smooth = create_smooth_line(x, y)
 
-    plt.plot(x_smooth, y_smooth, color=color, alpha=alpha, linewidth=linewidth)
+    plt.plot(
+        x_smooth, y_smooth, color=color, alpha=alpha, linewidth=linewidth, label=label
+    )
 
 
 def plot_trajectory(
@@ -73,7 +77,9 @@ def plot_trajectory(
     for player in selected_players:
         player_data = df[df["PLAYER"] == player]
         color = colors[selected_players.index(player)]
-        plot_player_trajectory(player_data, column, color=color, linewidth=4)
+        plot_player_trajectory(
+            player_data, column, color=color, linewidth=4, label=player
+        )
 
     if v_lines:
         for vline, label in v_lines.items():
@@ -100,15 +106,17 @@ def plot_trajectory(
                 fontsize=12,
             )
 
-    plt.xlabel("Distance from Rim (meters)", fontsize=18, labelpad=25)
-    plt.ylabel("Normalized Efficiency")
-    plt.title("Normalized Efficiency Binned per Every Half Meter")
+    plt.xlabel("Distance from Basket (meters)", fontsize=18, labelpad=25)
+    plt.ylabel("Field Goals")
+    plt.title(
+        "Normalized Field Goals Relative to Rest of Euroleague 23/24", fontsize=20
+    )
     plt.grid(True)
 
     if hide_yticks:
         plt.gca().yaxis.set_ticks([])
 
-    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+    plt.legend(loc="center left", bbox_to_anchor=(1, 0.5), title="Selected Players")
     plt.tight_layout()
 
     # Increase font size and adjust margins for x-axis labels
