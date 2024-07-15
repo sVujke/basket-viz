@@ -26,6 +26,8 @@ class ShotChart:
             "plot_shots": "all",  # options: 'all', 'made', 'miss'
             "coord_x": "COORD_X",
             "coord_y": "COORD_Y",
+            "made_action_ids": ["2FGM", "3FGM", "FTM"],
+            "missed_action_ids": ["2FGA", "3FGA", "FTA"],
             "sort_col": "UTC",
             "animation_interval": 100,
             "animation_repeat_delay": 1000,
@@ -243,7 +245,7 @@ class ShotChart:
         made["Result"] = "Made"
         miss["Result"] = "Missed"
         shots = pd.concat([made, miss])
-        shots.sort_values(by=self.config["sort_col"], inplace=True)
+        shots.sort_values(by=self.config["sort_col"], ascending=True, inplace=True)
 
         fig, ax = plt.subplots(figsize=self.config["figsize"])
         fig.patch.set_facecolor(self.config["court_background_color"])
@@ -338,6 +340,10 @@ class ShotChart:
             raise ValueError("No plot or animation available to save.")
 
     def get_fg_made_miss(self, df, player_name=None, team_name=None, game_id=None):
+
+        made_action_ids = self.config["made_action_ids"]
+        missed_action_ids = self.config["missed_action_ids"]
+
         if player_name:
             df = df[df["PLAYER"] == player_name]
         if team_name:
@@ -345,8 +351,8 @@ class ShotChart:
         if game_id:
             df = df[df["GAME_ID"] == game_id]
 
-        fg_made = df[df["ID_ACTION"].isin(["2FGM", "3FGM"])]
-        fg_miss = df[df["ID_ACTION"].isin(["2FGA", "3FGA"])]
+        fg_made = df[df["ID_ACTION"].isin(made_action_ids)]
+        fg_miss = df[df["ID_ACTION"].isin(missed_action_ids)]
         return fg_made, fg_miss
 
     def euroleague_field_goal_dots(
