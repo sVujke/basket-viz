@@ -23,13 +23,30 @@ pip install basket-viz
 ## 🎯 Shot Charts 
 
 ```python
-from basket_viz.shot_charts import ShotChart
+from basket_viz.court.shot_charts import ShotChart
 
 shot_chart = ShotChart()
 shot_chart.plot_shot_chart(df, player_name="NEDOVIC, NEMANJA")
 ```
 
 ![Alt Text](/media/shots.gif)
+
+## 🎢 Overlay 
+This module supports plotting static and animated overlay comparing the performance of individuals against the rest of the league. 
+
+```python
+from basket_viz.overlay.trajectory import PlotTrajectory
+
+pt = PlotTrajectory()
+
+players = ["Hezonja, Mario","James, Mike","Lessort, Mathias"]
+colors = [real_madrid_gold, monaco_red, panathenaicos_green]
+v_lines = {1.0: 'Short-Range', 4.0: 'Mid-Range', 6.75: 'Three-Point Line'}
+
+pt.plot_trajectory_animated(normalized_df, players, colors, v_lines=v_lines, title=f"Scoring Profiles \n EUROLEAGUE 23/24")
+```
+
+![Alt Text](/media/scoring_profile.gif)
 
 ## 📈 Relationships 
 
