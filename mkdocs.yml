@@ -1,0 +1,18 @@
+site_name: Basket Viz Documentation
+theme:
+  name: material
+  language: en
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sVujke/basket-viz
+
+nav:
+  - Home: index.md
+  - Shot Charts:
+      - Overview: shot_charts/overview.md
+      - Static Scatter: shot_charts/static_scatter.md
+      - Animated Scatter: shot_charts/animated_scatter.md
+      - Euroleague Scatter: shot_charts/euroleague_scatter.md
+      - Heatmap: shot_charts/heatmap.md
+
+docs_dir: docs
