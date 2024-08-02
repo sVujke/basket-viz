@@ -32,7 +32,21 @@ and if for customization purposes update them with
 ```python
 shot_chart.set_config_param(figsize=(14,12))
 ```
-The `ShotChart` class can be initialized with a configuration dictionary. Here are some key parameters:
+The `ShotChart` class can be initialized with a configuration dictionary. Here is an example:
+
+```python
+custom_config = {
+    "color_map": {"made": "blue", "miss": "red"},
+    "marker_size": 15,
+    "figsize": (12, 10),
+    "court_line_color": "grey",
+    "line_width": 2,
+    "outer_lines": False,
+    "court_background_color": "lightgrey"
+}
+
+shot_chart = ShotChart(config=custom_config)
+```
 
 
 ## Exporting Plots 

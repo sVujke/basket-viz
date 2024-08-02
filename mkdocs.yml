@@ -1,6 +1,10 @@
 site_name: Basket Viz Documentation
 theme:
   name: material
+  language: en
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sVujke/basket-viz
 
 nav:
   - Home: index.md
