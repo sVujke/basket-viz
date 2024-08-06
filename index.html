@@ -60,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#welcome-to-mkdocs" class="md-skip">
+        <a href="#basket-viz" class="md-skip">
           Skip to content
         </a>
       
@@ -198,17 +198,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Home
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="." class="md-nav__link md-nav__link--active">
         
   
@@ -218,43 +207,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Commands
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      Project layout
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -407,111 +359,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Overlay Charts
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            Overlay Charts
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="overlay/overview/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="shot_charts/trajectory_static.md" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Static Trajectory
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="shot_charts/trajectory_animated.md" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Animated Trajectory
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -532,32 +379,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Commands
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      Project layout
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -571,22 +392,60 @@
                   
 
 
-<h1 id="welcome-to-mkdocs">Welcome to MkDocs</h1>
-<p>For full documentation visit <a href="https://www.mkdocs.org">mkdocs.org</a>.</p>
-<h2 id="commands">Commands</h2>
-<ul>
-<li><code>mkdocs new [dir-name]</code> - Create a new project.</li>
-<li><code>mkdocs serve</code> - Start the live-reloading docs server.</li>
-<li><code>mkdocs build</code> - Build the documentation site.</li>
-<li><code>mkdocs -h</code> - Print help message and exit.</li>
-</ul>
-<h2 id="project-layout">Project layout</h2>
-<pre><code>mkdocs.yml    # The configuration file.
-docs/
-    index.md  # The documentation homepage.
-    ...       # Other markdown pages, images and other files.
-    shot_charts.md
+<h1 id="basket-viz">🏀 basket-viz</h1>
+<p>A Python library for creating interactive and customizable visualizations of basketball statistics.</p>
+<h1 id="getting-started">⛹️‍♂️ Getting Started</h1>
+<h2 id="installation">♻️  Installation</h2>
+<p>To install basket-viz, simply run:</p>
+<pre><code class="language-bash">pip install basket-viz
 </code></pre>
+<p>⭐️⭐️⭐️ Leave a star on <a href="https://github.com/sVujke/basket-viz/tree/main">GitHub</a></p>
+<h1 id="features">Features</h1>
+<h2 id="shot-charts">🎯 Shot Charts</h2>
+<p>Visualize the court and field goals made by players or teams. Generate <code>static</code> and <code>animated</code> plots. Customize the visual elements or utilize the included <code>Euroleague confings</code>.</p>
+<p>For more details read: </p>
+<ul>
+<li><a href="shot_charts/static_scatter/">Static Shot Chart - Scatter </a></li>
+<li><a href="shot_charts/animated_scatter/">Animated Shot Chart - Scatter</a></li>
+<li><a href="shot_charts/euroleague_scatter/">Euroleague Shot Chart - Scatter</a></li>
+</ul>
+<pre><code class="language-python">from basket_viz.court.shot_charts import ShotChart
+
+shot_chart = ShotChart()
+shot_chart.plot_shot_chart(df, player_name=&quot;SHANE, LARKIN&quot;)
+</code></pre>
+<p><img alt="Alt Text" src="/media/euroleague_shot_chart_efes.gif" /></p>
+<h2 id="overlay">🎢 Overlay</h2>
+<p>Plot <code>static</code> and <code>animated</code> overlay comparing the performance of individuals or teams against the rest of the league over a chosen trajectory (distance from the basket, quarters of the game). </p>
+<p>For more details read: </p>
+<ul>
+<li><a href="overlay/static-animated.md">Static Trajectory</a></li>
+<li><a href="overlay/trajectory-animated/">Animated Trajectory</a></li>
+</ul>
+<pre><code class="language-python">from basket_viz.overlay.trajectory import PlotTrajectory
+
+pt = PlotTrajectory()
+
+players = [&quot;Hezonja, Mario&quot;,&quot;James, Mike&quot;,&quot;Lessort, Mathias&quot;]
+colors = [real_madrid_gold, monaco_red, panathenaicos_green]
+v_lines = {1.0: 'Short-Range', 4.0: 'Mid-Range', 6.75: 'Three-Point Line'}
+
+pt.plot_trajectory_animated(normalized_df, players, colors, v_lines=v_lines, title=f&quot;Scoring Profiles \n EUROLEAGUE 23/24&quot;)
+</code></pre>
+<p><img alt="Alt Text" src="/media/scoring_profile.gif" /></p>
+<h2 id="relationships">📈 Relationships</h2>
+<p>Plot relationships between different stats of players of a team. </p>
+<p>To apply collor template that matches the brand of <code>Euroleague</code> teams use <code>use_team_config=True</code>. </p>
+<pre><code class="language-python">from basket_viz.relationships.plotter import PlotRelationship
+
+plotter = PlotRelationship(use_team_config=True,output_format='mp4')
+plotter.plot_animated_relationship(
+    df,
+    team_filter=&quot;BAR&quot;,
+    display_only_last_names=True,
+)
+</code></pre>
+<p><img alt="Alt Text" src="media/BAR_.gif" /></p>
 
 
 
