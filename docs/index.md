@@ -37,7 +37,7 @@ shot_chart = ShotChart()
 shot_chart.plot_shot_chart(df, player_name="SHANE, LARKIN")
 ```
 
-![Alt Text](/media/euroleague_shot_chart_efes.gif)
+![Alt Text](media/euroleague_shot_chart_efes.gif)
 
 ## 🎢 Overlay 
 Plot `static` and `animated` overlay comparing the performance of individuals or teams against the rest of the league over a chosen trajectory (distance from the basket, quarters of the game). 
@@ -59,7 +59,7 @@ v_lines = {1.0: 'Short-Range', 4.0: 'Mid-Range', 6.75: 'Three-Point Line'}
 pt.plot_trajectory_animated(normalized_df, players, colors, v_lines=v_lines, title=f"Scoring Profiles \n EUROLEAGUE 23/24")
 ```
 
-![Alt Text](/media/scoring_profile.gif)
+![Alt Text](media/scoring_profile.gif)
 
 ## 📈 Relationships 
 
