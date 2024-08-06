@@ -14,5 +14,9 @@ nav:
       - Animated Scatter: shot_charts/animated_scatter.md
       - Euroleague Scatter: shot_charts/euroleague_scatter.md
       - Heatmap: shot_charts/heatmap.md
+  - Overlay Charts:
+      - Overview: overlay/overview.md
+      - Static Trajectory: shot_charts/trajectory_static.md
+      - Animated Trajectory: shot_charts/trajectory_animated.md
 
 docs_dir: docs
