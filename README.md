@@ -10,7 +10,7 @@ A Python library for creating interactive and customizable visualizations of bas
 ![Last Commit](https://img.shields.io/github/last-commit/sVujke/basket-viz)
 ![Downloads](https://img.shields.io/pypi/dm/basket-viz)
 
-## ♻️  Installation
+## ♻️  Install from PyPI
 
 To install basket-viz, simply run:
 
@@ -19,6 +19,10 @@ pip install basket-viz
 ```
 
 # ⛹️‍♂️Getting Started 
+
+## 🔍 Docs
+
+For a comprehensive overview of features check out the [documentation](https://svujke.github.io/basket-viz).
 
 ## 🎯 Shot Charts 
 
