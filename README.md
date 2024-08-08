@@ -70,3 +70,16 @@ plotter.plot_animated_relationship(
 ```
 
 ![Alt Text](/media/BAR_.gif)
+
+# 🙌 Contibuting 
+
+We are continuously working on improving this project and we welcome your contributions!
+
+## 🐞 Open Issues 
+
+If you have any feature requests or bug reports, please don't hesitate to open an issue. This project is a work in progress, and your feedback is invaluable to us.
+
+## 👨‍💻 Pick up Issues
+
+You can also pick up an issue at any time and start working on it. Please make sure to follow our [contribution guidelines](CONTRIBUTING.md) to ensure a smooth collaboration process. Thank you for your support and happy coding!
+
