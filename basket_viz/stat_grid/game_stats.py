@@ -10,10 +10,10 @@ class PlayerStatsHeatmap:
     def __init__(self, config=None):
         default_params = {
             "figsize": (12, 8),
-            "cmap": "Greens",  # Default color map
+            "cmap": "Greens",
             "cbar": True,
-            "annot": True,  # Enable annotations by default for square mode
-            "shape": "square",  # Options: "square", "circle"
+            "annot": True,
+            "shape": "square",
             "linewidths": 0.5,
             "linecolor": "white",
             "highlight_params": {
@@ -40,16 +40,52 @@ class PlayerStatsHeatmap:
             self.params.update(config)
 
     def get_params(self):
+        """
+        Get the current config parameters.
+        Returns
+        -------
+        params : dict
+            The current parameters.
+        """
+
         return self.params
 
     def set_params(self, **kwargs):
+        """
+        Update the config parameters.
+        Parameters
+        ----------
+        **kwargs : dict
+            The parameters to update.
+        Returns
+        -------
+        None
+        """
         self.params.update(kwargs)
 
     def plot_stat_heatmap(self, df, team, player_names, num_games=None, stat="Points"):
-        # Prepare the DataFrame
+        """
+        Plot the heatmap of the specified stat for the players.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame containing the stats.
+        team : str
+            The team code to filter the data.
+        player_names : list
+            The list of player names to highlight.
+        num_games : int, default None
+            The number of games to consider.
+        stat : str, default "Points"
+            The stat to plot.
+        Returns
+        -------
+        heatmap_data : pd.DataFrame
+            The DataFrame containing the heatmap data.
+        """
+
         heatmap_data = self._prepare_data(df, team, num_games, stat)
 
-        # Plotting
         plt.figure(figsize=self.params["figsize"])
         ax = plt.gca()
 
@@ -84,14 +120,33 @@ class PlayerStatsHeatmap:
         return heatmap_data
 
     def _prepare_data(self, df, team, num_games, stat):
-        # Filter the DataFrame for the specified team
-        df = df[df["Team"] == team]
+        """
+        Prepare the data for the heatmap.
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame containing the game stats.
+        team : str
+            The team code to filter the data.
+        num_games : int
+            The number of games to consider.
+        stat : str
+            The stat to plot.
+        Returns
+        -------
+        heatmap_data : pd.DataFrame
+            The DataFrame containing the heatmap data.
+        """
+
+        if team:
+            df = df[df["Team"] == team]
+
         df = df[~df["Player"].isin(["Team", "Total"])]
 
         # Assign unique game numbers based on GAME_CODE
         df["game_num"] = pd.factorize(df["GAME_CODE"])[0] + 1
 
-        # Create a unique identifier for each player vs team vs game combination
+        # Create a unique identifier for each player vs team vs game combination (because games change)
         df["unique_game"] = df.apply(
             lambda row: f"{row['VS_TEAM']}_{row['game_num']}", axis=1
         )
@@ -118,15 +173,44 @@ class PlayerStatsHeatmap:
         return heatmap_data
 
     def _normalize_data(self, heatmap_data):
-        # Normalize the values for radius and colors
+        """
+        Normalize the stat data for the circle mode.
+        Parameters
+        ----------
+        heatmap_data : pd.DataFrame
+            The DataFrame containing the heatmap data.
+        Returns
+        -------
+        R : np.ndarray
+            Normalized radius values.
+        c : np.ndarray
+            Flattened array of the heatmap data.
+        """
+
         s = heatmap_data.to_numpy()
+        # nanmax to ignore NaN values
         max_val = np.nanmax(np.abs(s))
-        R = s / max_val / 2  # Normalize radius
+        # normalize the radius of the circles
+        R = s / max_val / 2
+        # from multidimensional to 1D array
         c = s.flatten()
 
         return R, c
 
     def _plot_circles(self, ax, heatmap_data):
+        """
+        Plot the heatmap using circles.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The axes to plot the circles.
+        heatmap_data : pd.DataFrame
+            The DataFrame containing the heatmap data.
+        Returns
+        -----
+        None
+        """
+
         x, y = np.meshgrid(
             np.arange(len(heatmap_data.columns)), np.arange(len(heatmap_data.index))
         )
@@ -158,15 +242,15 @@ class PlayerStatsHeatmap:
         ax.set_yticklabels(heatmap_data.index)
 
         # Add grid
+        # adding 1 ensures ticks start from the the start of the first column/row
+        # subtracting 0.5 centers the ticks between the grid lines
         ax.set_xticks(np.arange(len(heatmap_data.columns) + 1) - 0.5, minor=True)
         ax.set_yticks(np.arange(len(heatmap_data.index) + 1) - 0.5, minor=True)
         ax.grid(which="minor")
 
-        # Add colorbar
         if self.params["cbar"]:
             plt.colorbar(col, ax=ax)
 
-        # Annotate circles if annot is True
         if self.params["annot"]:
             for i in range(len(heatmap_data.index)):
                 for j in range(len(heatmap_data.columns)):
@@ -181,6 +265,21 @@ class PlayerStatsHeatmap:
                         )
 
     def _highlight_players(self, ax, heatmap_data, player_names):
+        """
+        Highlight the specified players' rows in the heatmap.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The axes to plot the heatmap.
+        heatmap_data : pd.DataFrame
+            The DataFrame containing the heatmap data.
+        player_names : list
+            The list of player names to highlight.
+        Returns
+        -------
+        None
+        """
+
         for player_name in player_names:
             if player_name in heatmap_data.index:
                 player_index = heatmap_data.index.get_loc(player_name)
