@@ -27,12 +27,24 @@ class PlayerStatsHeatmap:
                 "fontsize": 16,
             },
             "xlabel_params": {
-                "label": "Player vs Team vs Game",
+                "rotation": 45,
+                "ha": "right",
+                "fontsize": 10,
+            },
+            "xlabel_title_params": {  # New section for the main x-axis label
+                "xlabel": "Player vs Team vs Game",
                 "fontsize": 14,
                 "rotation": 0,
-                "ha": "right",
+                "ha": "center",
             },
-            "ylabel_params": {"label": "Players", "fontsize": 14},
+            "ylabel_params": {"fontsize": 14, "rotation": 0, "color": "black"},
+            "ylabel_title_params": {"ylabel": "Players", "fontsize": 14},
+            "columns": {  # Added config for column names
+                "team": "Team",
+                "player": "Player",
+                "game_code": "GAME_CODE",
+                "vs_team": "VS_TEAM",
+            },
         }
 
         self.params = default_params
@@ -47,7 +59,6 @@ class PlayerStatsHeatmap:
         params : dict
             The current parameters.
         """
-
         return self.params
 
     def set_params(self, **kwargs):
@@ -89,6 +100,32 @@ class PlayerStatsHeatmap:
         plt.figure(figsize=self.params["figsize"])
         ax = plt.gca()
 
+        if self.params["shape"] == "circle":
+
+            ax.set_yticks(np.arange(len(heatmap_data.index) + 1) - 0.5, minor=True)
+            ax.set_xticks(np.arange(len(heatmap_data.columns) + 1) - 0.5, minor=True)
+
+            # Manually set the major ticks without overwriting the grid
+            ax.set_yticks(np.arange(len(heatmap_data.index)), minor=False)
+            ax.set_xticks(np.arange(len(heatmap_data.columns)), minor=False)
+            ax.set_yticklabels(
+                heatmap_data.index,
+                va="center",
+                **self.params["ylabel_params"],
+            )
+            ax.set_xticklabels(
+                heatmap_data.columns,
+                **self.params["xlabel_params"],
+            )
+
+        else:
+            ax.set_yticks(np.arange(len(heatmap_data.index)) + 0.5, minor=False)
+            ax.set_yticklabels(
+                heatmap_data.index, va="center", **self.params["ylabel_params"]
+            )
+            ax.set_xticks(np.arange(len(heatmap_data.columns)) + 0.5, minor=False)
+            ax.set_xticklabels(heatmap_data.columns, ha="center")
+
         if self.params["shape"] == "square":
             # Square mode using seaborn heatmap
             sns.heatmap(
@@ -109,11 +146,12 @@ class PlayerStatsHeatmap:
         self._highlight_players(ax, heatmap_data, player_names)
 
         plt.title(**self.params["title_params"])
+
         plt.xlabel(
-            self.params["xlabel_params"].pop("label"), **self.params["xlabel_params"]
+            **self.params["xlabel_title_params"],
         )
         plt.ylabel(
-            self.params["ylabel_params"].pop("label"), **self.params["ylabel_params"]
+            **self.params["ylabel_title_params"],
         )
         plt.show()
 
@@ -138,17 +176,19 @@ class PlayerStatsHeatmap:
             The DataFrame containing the heatmap data.
         """
 
-        if team:
-            df = df[df["Team"] == team]
+        columns = self.params["columns"]
 
-        df = df[~df["Player"].isin(["Team", "Total"])]
+        if team:
+            df = df[df[columns["team"]] == team]
+
+        df = df[~df[columns["player"]].isin([columns["team"], "Total"])]
 
         # Assign unique game numbers based on GAME_CODE
-        df["game_num"] = pd.factorize(df["GAME_CODE"])[0] + 1
+        df["game_num"] = pd.factorize(df[columns["game_code"]])[0] + 1
 
         # Create a unique identifier for each player vs team vs game combination (because games change)
         df["unique_game"] = df.apply(
-            lambda row: f"{row['VS_TEAM']}_{row['game_num']}", axis=1
+            lambda row: f"{row[columns['vs_team']]}_{row['game_num']}", axis=1
         )
 
         # Check for duplicates in the unique_game column
@@ -162,7 +202,9 @@ class PlayerStatsHeatmap:
         df = df.sort_values(by="game_num")
 
         # Pivot the DataFrame to get players vs unique game heatmap
-        heatmap_data = df.pivot(index="Player", columns="unique_game", values=stat)
+        heatmap_data = df.pivot(
+            index=columns["player"], columns="unique_game", values=stat
+        )
 
         # Sort columns by game number
         sorted_columns = sorted(
@@ -222,30 +264,25 @@ class PlayerStatsHeatmap:
         circles = [
             plt.Circle((j, i), radius=r) for r, j, i in zip(R.flat, x.flat, y.flat)
         ]
+
+        norm = Normalize(vmin=np.nanmin(c), vmax=np.nanmax(c))
+
         col = PatchCollection(
             circles,
             array=c,
             cmap=self.params["cmap"],
             edgecolor=self.params["linecolor"],
-            norm=Normalize(vmin=-np.nanmax(np.abs(c)), vmax=np.nanmax(np.abs(c))),
+            norm=norm,
         )
         ax.add_collection(col)
 
-        # Set axis labels
-        ax.set_xticks(np.arange(len(heatmap_data.columns)))
-        ax.set_yticks(np.arange(len(heatmap_data.index)))
-        ax.set_xticklabels(
-            heatmap_data.columns,
-            rotation=self.params["xlabel_params"]["rotation"],
-            ha=self.params["xlabel_params"]["ha"],
-        )
-        ax.set_yticklabels(heatmap_data.index)
+        # keep circles symmetrical
+        ax.set_aspect("equal", "box")
 
         # Add grid
         # adding 1 ensures ticks start from the the start of the first column/row
         # subtracting 0.5 centers the ticks between the grid lines
-        ax.set_xticks(np.arange(len(heatmap_data.columns) + 1) - 0.5, minor=True)
-        ax.set_yticks(np.arange(len(heatmap_data.index) + 1) - 0.5, minor=True)
+
         ax.grid(which="minor")
 
         if self.params["cbar"]:
@@ -291,11 +328,24 @@ class PlayerStatsHeatmap:
                             self.params["highlight_params"]["backgroundcolor"]
                         )
                         tick.set_weight(self.params["highlight_params"]["fontweight"])
+                    # Center the y-tick labels vertically within the row
+                    tick.set_verticalalignment("center")
+
+                # Determine the x and y position adjustments based on shape
+                x_position = -0.5 if self.params["shape"] == "circle" else 0
+                y_position = (
+                    player_index - 0.5
+                    if self.params["shape"] == "circle"
+                    else player_index
+                )
 
                 # Draw a rectangle around the selected player's row
                 ax.add_patch(
                     plt.Rectangle(
-                        (-0.5, player_index - 0.5),  # x, y
+                        (
+                            x_position,
+                            y_position,
+                        ),  # x, y (adjust x and y if shape is 'circle')
                         len(heatmap_data.columns),  # width
                         1,  # height
                         fill=False,
