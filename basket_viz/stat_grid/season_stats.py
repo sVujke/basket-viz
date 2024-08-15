@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import os
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
@@ -25,6 +26,7 @@ class PlayerStatsHeatmap:
             "title_params": {
                 "label": "Stat Heatmap by Players in Different Games vs Teams",
                 "fontsize": 16,
+                "pad": 20,
             },
             "xlabel_params": {
                 "rotation": 45,
@@ -50,6 +52,8 @@ class PlayerStatsHeatmap:
         self.params = default_params
         if config:
             self.params.update(config)
+
+        self.fig = None
 
     def get_params(self):
         """
@@ -97,7 +101,7 @@ class PlayerStatsHeatmap:
 
         heatmap_data = self._prepare_data(df, team, num_games, stat)
 
-        plt.figure(figsize=self.params["figsize"])
+        self.fig = plt.figure(figsize=self.params["figsize"])
         ax = plt.gca()
 
         if self.params["shape"] == "circle":
@@ -154,8 +158,6 @@ class PlayerStatsHeatmap:
             **self.params["ylabel_title_params"],
         )
         plt.show()
-
-        return heatmap_data
 
     def _prepare_data(self, df, team, num_games, stat):
         """
@@ -353,3 +355,28 @@ class PlayerStatsHeatmap:
                         lw=self.params["highlight_params"]["lw"],
                     )
                 )
+
+    def save_plot(self, directory="output", file_name="plot", file_format=None):
+        """
+        Save the current plot to the specified directory.
+        Parameters
+        ----------
+        directory : str
+            The directory to save the plot in.
+        file_name : str
+            The name of the file to save.
+        file_format : str, optional
+            The format of the saved file (e.g., "png", "jpg").
+            If not provided, defaults to "png".
+        """
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        if self.fig is not None:
+            if file_format is None:
+                file_format = "png"
+            full_path = os.path.join(directory, f"{file_name}.{file_format}")
+            self.fig.savefig(full_path)
+            print(f"Saved figure to {full_path}")
+        else:
+            raise ValueError("No plot available to save.")
