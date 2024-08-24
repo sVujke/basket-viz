@@ -299,12 +299,12 @@ team_configs = {
         "animation_blit": True,
         "title": {"fontsize": 24, "fontweight": "bold", "color": alba_yellow},
     },
-    "TEL": {
-        "court_line_color": maccabi_blue,
+    "PRS": {  # the key might be wrong (we will know when the season starts)
+        "court_line_color": "white",
         "line_width": 2,
         "outer_lines": True,
-        "court_background_color": maccabi_yellow,
-        "color_map": {"made": maccabi_blue, "miss": "gray"},
+        "court_background_color": paris_black,
+        "color_map": {"made": paris_blue, "miss": paris_red},
         "marker_size": 8,
         "figsize": (14, 12),
         #'made_action_ids': ['LAYUPMD', '3FGM', '2FGM', 'DUNK', ],
@@ -316,6 +316,6 @@ team_configs = {
         "animation_interval": 100,
         "animation_repeat_delay": 1000,
         "animation_blit": True,
-        "title": {"fontsize": 24, "fontweight": "bold", "color": maccabi_blue},
+        "title": {"fontsize": 24, "fontweight": "bold", "color": "white"},
     },
 }
