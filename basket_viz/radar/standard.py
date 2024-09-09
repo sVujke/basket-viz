@@ -1,25 +1,12 @@
+from math import pi
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from math import pi
 from matplotlib.path import Path
-import matplotlib.image as mpimg
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from math import pi
-import urllib.request
-from PIL import Image
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from math import pi
-
-from PIL import Image, ImageDraw
-import numpy as np
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import matplotlib.image as mpimg
+from PIL import Image, ImageDraw
 
 
 def draw_radar(
