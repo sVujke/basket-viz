@@ -506,6 +506,97 @@ class RadarChart:
         title_fontsize = self.kwargs.get("title_fontsize", 20)
         plt.title(self.player_name, size=title_fontsize, color=title_color, y=1.05)
 
+    def add_comparison_images(self, start_x=0.2, spacing=0.3, y_offset=-0.2):
+        """Adds player images and names below the radar chart with configurable positions."""
+        if not self.ax:
+            return
+
+        num_images = len(self.player_images)
+
+        # Calculate starting x position to center the images
+        if num_images > 1:
+            start_x = 0.5 - (spacing * (num_images - 1)) / 2
+
+        for i, (img_path, player_name, color) in enumerate(
+            zip(self.player_images, self.player_names, self.line_colors)
+        ):
+            # Calculate the position for each image
+            position = (start_x + i * spacing, y_offset)
+
+            # Add the circular image
+            patcher = ImagePatcher(
+                img_path,
+                img_size=(300, 300),
+                ellipse_coords=(10, 10, 290, 290),
+                text_params={"ha": "center", "va": "bottom", "text_offset_y": 0.15},
+            )
+            patcher.add_circular_image(
+                self.ax, zoom=0.4, position=position, border_color=color
+            )
+
+            # Add player name below the image
+            self.ax.text(
+                position[0],
+                position[1] - 0.15,
+                player_name,
+                ha="center",
+                color=color,
+                fontsize=14,
+                transform=self.ax.transAxes,
+            )
+
+    def compare_radars(
+        self,
+        player_names,
+        player_images,
+        line_colors=None,
+        line_widths=2,
+        fill_radars=True,
+        radar_fill_colors=None,
+        figure_bg_color=None,
+        figsize=(12, 10),
+    ):
+        """Creates a radar chart comparing multiple players on the same chart."""
+        # Store the players' names, images, and colors for later use
+        self.player_names = player_names
+        self.player_images = player_images
+        self.line_colors = line_colors if line_colors else ["blue"] * len(player_names)
+
+        num_vars = len(self.columns)
+        angles = [n / float(num_vars) * 2 * pi for n in range(num_vars)]
+        angles += angles[:1]
+
+        # Set up the radar chart figure and axis
+        self.fig, self.ax = plt.subplots(figsize=figsize, subplot_kw=dict(polar=True))
+        if figure_bg_color:
+            self.fig.patch.set_facecolor(figure_bg_color)
+
+        # Set up the radar chart aesthetics
+        self.setup_radar_chart(self.ax, angles)
+
+        for i, player_name in enumerate(player_names):
+            df_player = self.dataframe[self.dataframe["player"] == player_name][
+                self.columns
+            ]
+            values = df_player.iloc[0].tolist()
+
+            color = self.line_colors[i]
+            width = line_widths[i] if isinstance(line_widths, list) else line_widths
+
+            self.draw_radar(
+                self.ax,
+                values,
+                angles,
+                color,
+                width,
+                fill_radars,
+                radar_fill_colors[i] if radar_fill_colors else color,
+            )
+
+    def display_chart(self):
+        """Display the radar chart and any additional elements (e.g., images)."""
+        plt.show()
+
 
 # Example usage
 if __name__ == "__main__":
@@ -529,7 +620,6 @@ if __name__ == "__main__":
     # # Create a RadarChart object and plot the radar chart
     # radar_chart = RadarChart(
     #     dataframe=df,
-    #     columns=["stat1", "stat2", "stat3", "stat4", "stat5"],
     #     player_name="Player 1",
     #     line_color="blue",
     #     radar_fill_color="lightblue",
