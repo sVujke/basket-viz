@@ -451,6 +451,9 @@ class RadarChart:
 
     def add_player_image(self, img_path):
         """Adds a circular player image in the center of the radar chart."""
+        border_color = self.kwargs.get("img_border_color", "white")
+        border_width = self.kwargs.get("img_border_width", 20)
+        background_color = self.kwargs.get("img_background_color", None)
         if self.ax and img_path:
             ellipse_coords = (10, 10, 290, 290)
             text_params = {"ha": "center", "va": "bottom", "text_offset_y": 0.15}
@@ -462,12 +465,22 @@ class RadarChart:
                 text_params=text_params,
             )
 
-            patcher.add_circular_image(self.ax, zoom=0.4, position=(0.5, 0.5))
+            patcher.add_circular_image(
+                self.ax,
+                zoom=0.5,
+                position=(0.5, 0.5),
+                border_color=border_color,
+                border_width=border_width,
+                background_color=background_color,
+            )
 
-    def plot_radar(self):
+    def plot_radar(self, player_name):
         """Creates the radar chart without the image."""
         # Prepare the radar chart data
-        df = self.dataframe[self.columns]
+        df = self.dataframe
+        df = df[df["player"] == player_name]
+        df = df[self.columns]
+
         values = df.iloc[0].tolist()
         num_vars = len(self.columns)
         angles = [n / float(num_vars) * 2 * pi for n in range(num_vars)]
