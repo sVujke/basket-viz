@@ -14,6 +14,7 @@ class RadarChart:
         self.kwargs = kwargs
         self.fig, self.ax = None, None  # To store the figure and axis after plotting
         self.player_images = []
+        self.figsize = self.kwargs.get("figsize", (12, 10))
 
     def draw_radar(
         self, ax, values, angles, line_color, line_width, fill_radar, radar_fill_color
@@ -62,7 +63,7 @@ class RadarChart:
         """Adds a circular player image in the center of the radar chart."""
         border_color = self.kwargs.get("img_border_color", "white")
         border_width = self.kwargs.get("img_border_width", 20)
-        background_color = self.kwargs.get("img_background_color", None)
+
         if self.ax and img_path:
             ellipse_coords = (10, 10, 290, 290)
             text_params = {"ha": "center", "va": "bottom", "text_offset_y": 0.15}
@@ -82,7 +83,7 @@ class RadarChart:
                 border_width=border_width,
             )
 
-    def plot_radar(self, player_name):
+    def plot_radar(self, player_name, title_sufix=None):
         """Creates the radar chart without the image."""
         # Prepare the radar chart data
         df = self.dataframe
@@ -95,8 +96,10 @@ class RadarChart:
         angles += angles[:1]
 
         # Set up the radar chart figure and axis
-        figsize = self.kwargs.get("figsize", (12, 10))
-        self.fig, self.ax = plt.subplots(figsize=figsize, subplot_kw=dict(polar=True))
+        # figsize = self.kwargs.get("figsize", (12, 10))
+        self.fig, self.ax = plt.subplots(
+            figsize=self.figsize, subplot_kw=dict(polar=True)
+        )
 
         # Set up the radar chart aesthetics
         self.setup_radar_chart(self.ax, angles)
@@ -120,7 +123,15 @@ class RadarChart:
         # Add the title
         title_color = self.kwargs.get("title_color", "green")
         title_fontsize = self.kwargs.get("title_fontsize", 20)
-        plt.title(player_name, size=title_fontsize, color=title_color, y=1.05)
+        y = self.kwargs.get("title_y", 1.05)
+        title_weight = self.kwargs.get("title_weight", "bold")
+        plt.title(
+            f"{player_name} {title_sufix}",
+            size=title_fontsize,
+            color=title_color,
+            y=y,
+            weight=title_weight,
+        )
 
     def _process_player_image(self, player_name, output_path):
         url = self.dataframe[self.dataframe["player"] == player_name][
@@ -183,12 +194,9 @@ class RadarChart:
     def compare_radars(
         self,
         player_names,
+        title,
         line_colors=None,
-        line_widths=2,
-        fill_radars=True,
         radar_fill_colors=None,
-        figure_bg_color=None,
-        figsize=(12, 10),
     ):
         """Creates a radar chart comparing multiple players on the same chart."""
         # Store the players' names, images, and colors for later use
@@ -200,9 +208,9 @@ class RadarChart:
         angles += angles[:1]
 
         # Set up the radar chart figure and axis
-        self.fig, self.ax = plt.subplots(figsize=figsize, subplot_kw=dict(polar=True))
-        if figure_bg_color:
-            self.fig.patch.set_facecolor(figure_bg_color)
+        self.fig, self.ax = plt.subplots(
+            figsize=self.figsize, subplot_kw=dict(polar=True)
+        )
 
         # Set up the radar chart aesthetics
         self.setup_radar_chart(self.ax, angles)
@@ -214,17 +222,26 @@ class RadarChart:
             values = df_player.iloc[0].tolist()
 
             color = self.line_colors[i]
-            width = line_widths[i] if isinstance(line_widths, list) else line_widths
+            line_width = self.kwargs.get("line_width", 2)
+            fill_radar = self.kwargs.get("fill_radar", True)
 
             self.draw_radar(
                 self.ax,
                 values,
                 angles,
                 color,
-                width,
-                fill_radars,
+                line_width,
+                fill_radar,
                 radar_fill_colors[i] if radar_fill_colors else color,
             )
+
+        title_color = self.kwargs.get("title_color", "green")
+        title_fontsize = self.kwargs.get("title_fontsize", 20)
+        y = self.kwargs.get("title_y", 1.05)
+        title_weight = self.kwargs.get("title_weight", "bold")
+        plt.title(
+            title, size=title_fontsize, color=title_color, y=y, weight=title_weight
+        )
 
     def display_chart(self):
         """Display the radar chart and any additional elements (e.g., images)."""
