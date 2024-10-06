@@ -6,10 +6,13 @@ from IPython.display import HTML
 import os
 from basket_viz.court.euroleague_team_configs import team_configs
 from matplotlib.colors import LinearSegmentedColormap
-import seaborn as sns
 from matplotlib.patches import PathPatch
 from matplotlib.collections import PatchCollection
 from matplotlib.path import Path
+import numpy as np
+from matplotlib.collections import RegularPolyCollection
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
 
 
 class ShotChart:
@@ -38,6 +41,8 @@ class ShotChart:
                 "fontweight": "bold",
                 "color": "black",
             },
+            "gridsize": 15,
+            "cmap": "RdYlGn",
         }
 
         if use_team_config and use_team_config in team_configs:
@@ -371,17 +376,31 @@ class ShotChart:
         else:
             self.plot_field_goal_scatter(fg_made, fg_miss, title=title)
 
-    def get_hexbin(self, data):
+    def get_hexbin_from_data_points(self, data):
 
         hc = plt.hexbin(
-            data[self.coord_x],
-            data[self.coord_y],
-            gridsize=self.gridsize,
+            data[self.config["coord_x"]],
+            data[self.config["coord_y"]],
+            gridsize=self.config["gridsize"],
             extent=self.config["hexagon_extent"],
-            mincnt=1,
+            mincnt=0,
         )
         plt.close()
         return hc
+
+    def get_hexbin_from_offset_values(self, ax, offsets, values):
+
+        hc = ax.hexbin(
+            offsets[:, 0],
+            offsets[:, 1],
+            gridsize=self.config["gridsize"],
+            # edgecolors=edge_color,  # Set the border color
+            # linewidths=edge_thickness,
+            C=np.array(values),
+            extent=self.config["hexagon_extent"],
+        )
+        plt.close()
+        return ax, hc
 
     def create_custom_cmap(self):
         colors = [
@@ -481,6 +500,362 @@ class ShotChart:
             custom_cmap=custom_cmap,
             sized=sized,
         )
+
+    # def _divide_hexbins(self, numerator_hexbin, denominator_hexbin):
+    #     numerator_values = numerator_hexbin.get_array()
+    #     denominator_values = denominator_hexbin.get_array()
+
+    #     # ratio_values = np.divide(
+    #     #     numerator_values,
+    #     #     denominator_values,
+    #     #     out=np.zeros_like(numerator_values),
+    #     #     where=denominator_values != 0,
+    #     # )
+
+    #     print(numerator_hexbin.get_array())
+    #     print(denominator_hexbin.get_array())
+    #     ratio_values = numerator_hexbin.get_array() / denominator_hexbin.get_array()
+
+    #     offsets = denominator_hexbin.get_offsets()
+
+    #     return offsets, ratio_values
+
+    def plot_hexbin_data(self, offsets, values, mincnt=0, title=None):
+        """
+        Plot the efficiency using ax.hexbin with data from hexbin_data_with_coords.
+        """
+        # Unpack the coordinates and efficiency values
+        # coords, efficiency = zip(*hexbin_data_with_coords)
+        # coords = np.array(coords)  # Convert to numpy array for easier indexing
+        # efficiency = np.array(efficiency)  # Efficiency values
+
+        # # Create the plot
+        fig, ax = plt.subplots(figsize=self.config["figsize"])
+
+        # # Plot the hexagons using ax.hexbin()
+        # efficiency_hexbin = self.add_hexbin(
+        #     ax, coords=coords, values=efficiency, gridsize=gridsize, cmap=cmap
+        # )
+
+        edge_color = "white"
+        edge_thickness = 2
+
+        # zero_value_indices = np.where(values == 0)[0]
+        # print(
+        #     f"Hexagons with zero values: {zero_value_indices}"
+        # )  # You can store or log this
+
+        # # Set hexagons with 0 values to NaN so they won't be plotted
+        values_filtered = np.array(values)
+        values_filtered[values_filtered == 0] = np.nan
+
+        hc = ax.hexbin(
+            offsets[:, 0],
+            offsets[:, 1],
+            gridsize=self.config["gridsize"],
+            edgecolors=edge_color,  # Set the border color
+            linewidths=edge_thickness,
+            C=values_filtered,
+            extent=self.config["hexagon_extent"],
+            cmap=self.config["cmap"],
+            mincnt=mincnt,
+        )
+
+        plt.colorbar(hc, ax=ax, label="Shooting Efficiency")
+
+        # Draw the court and set limits
+        self.draw_court(ax)
+        ax.set_xlim([-800, 800])
+        ax.set_ylim([-200, 1300])
+
+        ax.set_aspect("equal")
+
+        if title:
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
+
+        plt.show()
+
+    # Combine all steps into a single method for convenience
+
+    def get_player_hexbin_data(self, df, player_name):
+        """
+        Filters the dataframe for a specific player and returns a dataframe
+        with columns: player_name, offsets, values_made, values_missed, values_all.
+        """
+        # Filter the dataframe by player name
+        df_player = df[df["PLAYER"] == player_name]
+
+        # Separate made and missed shots
+        fg_made, fg_miss = self.get_fg_made_miss(df_player)
+
+        # Get the hexbin offsets and values for made shots
+        made_hc = self.get_hexbin_from_data_points(fg_made)
+        values_made = made_hc.get_array()
+        offsets_made = made_hc.get_offsets()
+
+        # Get the hexbin offsets and values for missed shots
+        miss_hc = self.get_hexbin_from_data_points(fg_miss)
+        values_missed = miss_hc.get_array()
+        offsets_missed = miss_hc.get_offsets()
+
+        # Get the hexbin offsets and values for all shots
+        all_hc = self.get_hexbin_from_data_points(df_player)
+        values_all = all_hc.get_array()
+        offsets_all = all_hc.get_offsets()
+
+        # this is for the case when there was only a few shots in a hexbin and they were misses
+        adjustment = np.where(values_all != 0, 1, 0) * 0.001
+        adjusted_values_made = values_made + adjustment
+
+        ratio_values = adjusted_values_made / values_all
+
+        # Create a dataframe to return
+        shot_data = {
+            "player_name": [player_name],
+            "offsets": [offsets_all],
+            "values_made": [values_made],
+            "values_missed": [values_missed],
+            "values_all": [values_all],
+            "values_ratio": [ratio_values],
+        }
+
+        result_df = pd.DataFrame(shot_data)
+
+        plt.close()  # Close the plots to avoid displaying them during function call
+
+        return result_df
+
+    def get_hexbin_data_for_dataframe(self, df):
+        """
+        Processes the shot data for all players and returns a dataframe containing:
+        player_name, offsets, values_made, values_missed, values_all.
+        """
+        players = df["PLAYER"].unique()
+        all_players_data = []
+
+        # Loop over each player and get shot data
+        for player_name in players:
+            player_data = self.get_player_hexbin_data(df, player_name)
+            all_players_data.append(player_data)
+
+        # Concatenate all the players' data into a single dataframe
+        all_players_df = pd.concat(all_players_data, ignore_index=True)
+
+        return all_players_df
+
+    def _normalize_totals(self, all_players_df, metric="made"):
+        """
+        Calculates the totals for all players' values and normalizes the performance
+        of each player against the rest of the league.
+
+        Returns a dataframe with the normalized values for each player.
+        """
+        metrics = {
+            "made": "values_made",
+            "missed": "values_missed",
+            "all": "values_all",
+        }
+        # Initialize arrays to store totals
+        total_values = np.zeros_like(all_players_df[metrics[metric]].values[0])
+        # total_values_all = np.zeros_like(all_players_df["values_all"].values[0])
+
+        # Calculate the total values across all players
+        for _, row in all_players_df.iterrows():
+            total_values += row[metrics[metric]]
+            # total_values_all += row["values_all"]
+
+        # Create a new dataframe to store the normalized values
+        normalized_data = []
+
+        for _, row in all_players_df.iterrows():
+            player_name = row["player_name"]
+            offsets = row["offsets"]
+            values = row[metrics[metric]]
+            # values_all = row["values_all"]
+
+            # Normalize the player's values by the league totals
+            normalized_values = np.divide(
+                values,
+                total_values,
+                out=np.zeros_like(values),
+                where=total_values != 0,
+            )
+            # normalized_values_all = np.divide(
+            #     values_all,
+            #     total_values_all,
+            #     out=np.zeros_like(values_all),
+            #     where=total_values_all != 0,
+            # )
+
+            normalized_data.append(
+                {
+                    "player_name": player_name,
+                    "offsets": offsets,
+                    f"normalized_values_{metric}": normalized_values,
+                    # "normalized_values_all": normalized_values_all,
+                }
+            )
+
+        # Return a dataframe containing the normalized values for all players
+        normalized_df = pd.DataFrame(normalized_data)
+
+        return normalized_df
+
+    def minmax_scale_normalized_values(self, normalized_df):
+        """
+        Applies Min-Max scaling to normalized values for each hexbin to see who performs the best per bin.
+
+        Returns a dataframe with scaled values for each player.
+        """
+        # Initialize lists to store scaled values
+        scaled_data = []
+
+        # Retrieve the offsets (bins) from the first player row
+        offsets = normalized_df["offsets"].values[0]
+
+        # Initialize MinMaxScaler
+        scaler = MinMaxScaler()
+
+        # We will loop over each bin (for each player) and apply Min-Max scaling
+        for bin_idx in range(len(offsets)):
+            # Collect the bin values for all players for 'values_made' and 'values_all'
+            values_made_for_bin = np.array(
+                [
+                    row["normalized_values_made"][bin_idx]
+                    for _, row in normalized_df.iterrows()
+                ]
+            )
+            values_all_for_bin = np.array(
+                [
+                    row["normalized_values_all"][bin_idx]
+                    for _, row in normalized_df.iterrows()
+                ]
+            )
+
+            # Reshape to 2D arrays for scaling
+            values_made_for_bin = values_made_for_bin.reshape(-1, 1)
+            values_all_for_bin = values_all_for_bin.reshape(-1, 1)
+
+            # Scale the values using MinMaxScaler
+            scaled_values_made_for_bin = scaler.fit_transform(
+                values_made_for_bin
+            ).flatten()
+            scaled_values_all_for_bin = scaler.fit_transform(
+                values_all_for_bin
+            ).flatten()
+
+            # Store the scaled values back in a list
+            scaled_data.append(
+                {
+                    "bin_idx": bin_idx,
+                    "scaled_values_made": scaled_values_made_for_bin,
+                    "scaled_values_all": scaled_values_all_for_bin,
+                }
+            )
+
+        # Convert the scaled data into a dataframe
+        for idx, row in normalized_df.iterrows():
+            player_name = row["player_name"]
+            offsets = row["offsets"]
+
+            scaled_values_made = np.array(
+                [
+                    scaled_data[bin_idx]["scaled_values_made"][idx]
+                    for bin_idx in range(len(offsets))
+                ]
+            )
+            scaled_values_all = np.array(
+                [
+                    scaled_data[bin_idx]["scaled_values_all"][idx]
+                    for bin_idx in range(len(offsets))
+                ]
+            )
+
+            normalized_df.at[idx, "scaled_values_made"] = scaled_values_made
+            normalized_df.at[idx, "scaled_values_all"] = scaled_values_all
+
+        return normalized_df
+
+    # def plot_shooting_efficiency_heatmap(
+    #     self,
+    #     df,
+    #     player_name=None,
+    #     team_name=None,
+    #     game_id=None,
+    #     title=None,
+    #     gridsize=15,
+    #     custom_cmap=None,
+    # ):
+    #     # Get made and missed field goals
+    #     fg_made, fg_miss = self.get_fg_made_miss(df, player_name, team_name, game_id)
+
+    #     # Concatenate made and missed shots
+    #     shots_df = pd.concat([fg_made.assign(made=1), fg_miss.assign(made=0)])
+
+    #     # Use the same hexbin to calculate both total attempts and made shots
+    #     self.fig, ax = plt.subplots(figsize=self.config["figsize"])
+
+    #     # Create hexbin to count total shots and made shots
+    #     hexbin = ax.hexbin(
+    #         shots_df[self.config["coord_x"]],
+    #         shots_df[self.config["coord_y"]],
+    #         C=shots_df["made"],
+    #         reduce_C_function=np.sum,
+    #         gridsize=gridsize,
+    #         cmap=custom_cmap or plt.cm.viridis,
+    #         extent=self.config["hexagon_extent"],
+    #     )
+
+    #     # Use the "norm" argument to normalize efficiency (shots made / total shots)
+    #     attempts_hexbin = ax.hexbin(
+    #         shots_df[self.config["coord_x"]],
+    #         shots_df[self.config["coord_y"]],
+    #         gridsize=gridsize,
+    #         cmap=plt.cm.gray_r,
+    #         extent=self.config["hexagon_extent"],
+    #         alpha=0.0,  # Invisible plot, just to count total attempts
+    #     )
+
+    #     # Now calculate efficiency
+    #     attempts = attempts_hexbin.get_array()
+    #     made = hexbin.get_array()
+
+    # Avoid division by zero by replacing zeros with a very small number
+    # efficiency = np.divide(
+    #     made, attempts, out=np.zeros_like(made), where=attempts != 0
+    # )
+
+    # # Re-plot with efficiency
+    # efficiency_hexbin = ax.hexbin(
+    #     shots_df[self.config["coord_x"]],
+    #     shots_df[self.config["coord_y"]],
+    #     C=efficiency,
+    #     gridsize=gridsize,
+    #     cmap=custom_cmap or plt.cm.viridis,
+    #     extent=self.config["hexagon_extent"],
+    # )
+
+    # # Add a color bar for shooting efficiency
+    # plt.colorbar(efficiency_hexbin, ax=ax, label="Shooting Efficiency")
+
+    # self.draw_court(ax)
+    # ax.set_xlim([-800, 800])
+    # ax.set_ylim([-200, 1300])
+
+    # if title:
+    #     ax.set_title(
+    #         title,
+    #         fontsize=self.config["title"]["fontsize"],
+    #         fontweight=self.config["title"]["fontweight"],
+    #         color=self.config["title"]["color"],
+    #     )
+
+    # plt.show()
 
 
 # Example usage
