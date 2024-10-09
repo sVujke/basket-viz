@@ -11,6 +11,10 @@ from matplotlib.collections import PatchCollection
 from matplotlib.path import Path
 import numpy as np
 from matplotlib.collections import RegularPolyCollection
+from matplotlib.colors import LogNorm
+from matplotlib.colors import SymLogNorm
+
+
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 
@@ -548,17 +552,21 @@ class ShotChart:
         # # Set hexagons with 0 values to NaN so they won't be plotted
         values_filtered = np.array(values)
         values_filtered[values_filtered == 0] = np.nan
+        vmax_value = np.nanmax(values_filtered)  # Max of non-zero values
 
         hc = ax.hexbin(
             offsets[:, 0],
             offsets[:, 1],
             gridsize=self.config["gridsize"],
-            edgecolors=edge_color,  # Set the border color
+            edgecolors=edge_color,
             linewidths=edge_thickness,
             C=values_filtered,
             extent=self.config["hexagon_extent"],
             cmap=self.config["cmap"],
             mincnt=mincnt,
+            norm=SymLogNorm(
+                linthresh=1e-2, linscale=1, vmin=0.1, vmax=vmax_value
+            ),  # Adjust thresholds
         )
 
         plt.colorbar(hc, ax=ax, label="Shooting Efficiency")
