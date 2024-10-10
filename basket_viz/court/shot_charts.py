@@ -458,24 +458,304 @@ class ShotChart:
 
         plt.show()
 
-    def sized_hexbin(self, ax, hc):
-        offsets = hc.get_offsets()
-        orgpath = hc.get_paths()[0]
-        verts = orgpath.vertices
-        values = hc.get_array()
-        ma = values.max()
-        patches = []
+    # def sized_hexbin(self, ax, hc):
+    #         offsets = hc.get_offsets()
+    #         orgpath = hc.get_paths()[0]
+    #         verts = orgpath.vertices
+    #         values = hc.get_array()
+    #         ma = values.max()
+    #         patches = []
 
-        for offset, val in zip(offsets, values):
-            v1 = verts * val / ma + offset
+    #         for offset, val in zip(offsets, values):
+    #             v1 = verts * val / ma + offset
+    #             path = Path(v1, orgpath.codes)
+    #             patch = PathPatch(path)
+    #             patches.append(patch)
+
+    #         pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
+    #         pc.set_array(values)
+    #         ax.add_collection(pc)
+    #         hc.remove()
+
+    # def sized_hexbin(self, ax, hc, size_values=None, scaling_factor=0.8, min_size=0.1):
+    #     """
+    #     Adjust the size of hexagons based on the provided size_values (e.g., frequency).
+    #     If size_values is None, it will use the values in the hexbin collection (efficiency).
+
+    #     Args:
+    #     - ax: Matplotlib axis object.
+    #     - hc: Hexbin collection.
+    #     - size_values: Array of values used to scale the hexagons. If None, use hc.get_array().
+    #     - scaling_factor: A factor to control the overall scaling of hexagons.
+    #     - min_size: The minimum size of a hexagon (for very low frequency values).
+    #     """
+    #     offsets = hc.get_offsets()  # Hexagon centers
+    #     orgpath = hc.get_paths()[0]  # The original hexagon path
+    #     verts = orgpath.vertices  # Vertices of the hexagons
+
+    #     # Use efficiency values if no custom size_values array is provided
+    #     if size_values is None:
+    #         size_values = hc.get_array()
+
+    #     # Logarithmic scaling for size values
+    #     size_values = np.array(size_values)
+    #     log_size_values = np.log1p(
+    #         size_values
+    #     )  # Log scaling to make small sizes smaller
+
+    #     # Get dynamic upper bound for normalization (based on the max size_value)
+    #     size_min = log_size_values.min()
+    #     size_max = log_size_values.max()
+
+    #     # Instead of a fixed max (1.5), use a dynamic max based on the distribution of size values
+    #     dynamic_max_size = (
+    #         2 * scaling_factor
+    #     )  # Dynamic upper bound (you can adjust the factor)
+
+    #     # Normalize log-transformed size values to the range [min_size, dynamic_max_size]
+    #     normalized_sizes = (log_size_values - size_min) / (size_max - size_min) * (
+    #         dynamic_max_size - min_size
+    #     ) + min_size
+
+    #     patches = []
+
+    #     # Create hexagons with sizes scaled based on the normalized size values
+    #     for offset, size in zip(offsets, normalized_sizes):
+    #         v1 = verts * size + offset  # Scale vertices based on size_values
+    #         print("Offset:", offset)
+    #         print("Size:", size)
+    #         print("Scaled vertices (v1):", v1)
+    #         path = Path(v1, orgpath.codes)
+    #         patch = PathPatch(path)
+    #         patches.append(patch)
+
+    #     # Use the original color array (efficiency) from the hexbin collection to set color
+    #     color_values = hc.get_array()  # This keeps the color tied to efficiency values
+
+    #     # Create PatchCollection and add to the axis
+    #     pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
+    #     pc.set_array(color_values)  # Set color based on original efficiency values
+    #     ax.add_collection(pc)
+
+    #     # Remove the original hexbin collection (but preserve the color array)
+    #     hc.remove()
+
+    # def sized_hexbin(
+    #     self, hc, ax, offsets, size_values, efficiency_values, max_size=1.5
+    # ):
+    #     """
+    #     Adjust the size of hexagons based on the provided size_values (e.g., frequency),
+    #     and color them based on efficiency_values, ensuring the hexagons scale correctly
+    #     without moving their position on the plot.
+
+    #     Args:
+    #     - ax: Matplotlib axis object.
+    #     - offsets: Array of hexagon centers (x, y coordinates) on the plot.
+    #     - size_values: Array of values used to scale the hexagons (e.g., shot frequencies).
+    #     - efficiency_values: Array of values used to color the hexagons (e.g., shooting efficiency).
+    #     - max_size: The maximum hexagon size.
+    #     """
+    #     print("orgpaths")
+    #     orgpath = hc.get_paths()[0]  # Get the original hexagon path
+    #     print("verts")
+
+    #     verts = orgpath.vertices  # Vertices of the hexagons
+
+    #     # Normalize size_values between 0 and max_size
+    #     print("size_values")
+    #     size_values = np.array(size_values)
+    #     size_min = np.min(size_values[size_values > 0])  # Ignore zero frequencies
+    #     size_max = np.max(size_values)
+    #     print(size_min, size_max)
+    #     size_values = size_values[size_values > 0]
+    #     # Normalize sizes to the range [0, 1] and rescale to max_size
+    #     normalized_sizes = (size_values - size_min) / (size_max - size_min)
+    #     scaled_sizes = normalized_sizes * (
+    #         max_size - 0.1
+    #     )  # Scale to desired range [0.1, max_size]
+
+    #     patches = []
+
+    #     # Calculate the center of the hexagon to avoid moving the position
+    #     print("hex_center")
+    #     hex_center = np.mean(verts, axis=0)
+
+    #     # Create hexagons with sizes scaled based on the normalized sizes
+    #     for offset, real_size, size in zip(offsets, size_values, scaled_sizes):
+    #         # Scale the hexagon vertices relative to its center and then apply offset
+    #         print("entered loop")
+    #         v1 = (verts - hex_center) * size + offset
+
+    #         # Print statements for debugging (optional)
+    #         print("Offset:", offset)
+    #         print("Real size:", real_size)
+    #         print("Size:", size)
+    #         print("Hexagon center:", hex_center)
+    #         print("Scaled vertices (v1):", v1)
+
+    #         # Create path and patch
+    #         path = Path(v1, orgpath.codes)
+    #         patch = PathPatch(path)
+    #         patches.append(patch)
+
+    #     # Use efficiency_values to set color for the hexagons
+    #     color_values = np.array(
+    #         efficiency_values
+    #     )  # Ensure efficiency values are in an array
+
+    #     # Create PatchCollection and add to the axis
+    #     pc = PatchCollection(patches, cmap="RdYlGn", edgecolor="k")
+    #     pc.set_array(color_values)  # Set color based on efficiency values
+    #     ax.add_collection(pc)
+
+    #     # Add a colorbar to show efficiency
+    #     plt.colorbar(pc, ax=ax, label="Efficiency")
+
+    # def sized_hexbin(
+    #     self, hc, ax, offsets, size_values, efficiency_values, max_size=1.5
+    # ):
+    #     """
+    #     Adjust the size of hexagons based on the provided size_values (e.g., frequency),
+    #     and color them based on efficiency_values, ensuring the hexagons scale correctly
+    #     without moving their position on the plot.
+
+    #     Args:
+    #     - hc: The original hexbin collection.
+    #     - ax: Matplotlib axis object.
+    #     - offsets: Array of hexagon centers (x, y coordinates) on the plot.
+    #     - size_values: Array of values used to scale the hexagons (e.g., shot frequencies).
+    #     - efficiency_values: Array of values used to color the hexagons (e.g., shooting efficiency).
+    #     - max_size: The maximum hexagon size.
+    #     """
+
+    #     orgpath = hc.get_paths()[0]  # Get the original hexagon path
+    #     verts = orgpath.vertices  # Vertices of the hexagons
+
+    #     # Remove zero size values from size_values and their corresponding offsets and efficiency values
+    #     valid_indices = size_values > 0
+    #     size_values_filtered = size_values[valid_indices]
+    #     offsets_filtered = offsets[valid_indices]
+    #     efficiency_values_filtered = efficiency_values[valid_indices]
+
+    #     # Normalize size_values between 0 and max_size
+    #     size_min = np.min(size_values_filtered)  # After filtering zero frequencies
+    #     size_max = np.max(size_values_filtered)
+
+    #     # Normalize sizes to the range [0, 1] and rescale to max_size
+    #     normalized_sizes = (size_values_filtered - size_min) / (size_max - size_min)
+    #     scaled_sizes = (
+    #         normalized_sizes * (max_size - 0.1) + 0.1
+    #     )  # Scale to range [0.1, max_size]
+
+    #     patches = []
+
+    #     # Calculate the center of the hexagon to avoid moving the position
+    #     hex_center = np.mean(verts, axis=0)
+
+    #     # Create hexagons with sizes scaled based on the normalized sizes
+    #     for offset, size in zip(offsets_filtered, scaled_sizes):
+    #         # Scale the hexagon vertices relative to its center and then apply offset
+    #         v1 = (verts - hex_center) * size + offset
+
+    #         # Create path and patch
+    #         path = Path(v1, orgpath.codes)
+    #         patch = PathPatch(path)
+    #         patches.append(patch)
+
+    #     # Use efficiency_values to set color for the hexagons
+    #     color_values = np.array(
+    #         efficiency_values_filtered
+    #     )  # Ensure efficiency values are in an array
+
+    #     # Create PatchCollection and add to the axis
+    #     pc = PatchCollection(patches, cmap="RdYlGn", edgecolor="k")
+    #     pc.set_array(color_values)  # Set color based on efficiency values
+    #     ax.add_collection(pc)
+
+    #     # Add a colorbar to show efficiency
+    #     plt.colorbar(pc, ax=ax, label="Shooting Efficiency")
+    def sized_hexbin(
+        self,
+        hc,
+        ax,
+        offsets,
+        size_values,
+        efficiency_values,
+        min_size=0.2,
+        max_size=1.5,
+        scaling_factor=0.8,
+    ):
+        """
+        Adjust the size of hexagons based on the provided size_values (e.g., frequency),
+        and color them based on efficiency_values, ensuring the hexagons scale correctly
+        without moving their position on the plot. Uses logarithmic scaling for size.
+
+        Args:
+        - hc: The original hexbin collection.
+        - ax: Matplotlib axis object.
+        - offsets: Array of hexagon centers (x, y coordinates) on the plot.
+        - size_values: Array of values used to scale the hexagons (e.g., shot frequencies).
+        - efficiency_values: Array of values used to color the hexagons (e.g., shooting efficiency).
+        - min_size: Minimum size of hexagons.
+        - max_size: Maximum size of hexagons (dynamic upper bound).
+        - scaling_factor: A factor to control the overall scaling of hexagons.
+        """
+
+        # Remove zero size values from size_values and their corresponding offsets and efficiency values
+        valid_indices = size_values > 0
+        size_values_filtered = size_values[valid_indices]
+        offsets_filtered = offsets[valid_indices]
+        efficiency_values_filtered = efficiency_values[valid_indices]
+
+        orgpath = hc.get_paths()[0]  # Get the original hexagon path
+        verts = orgpath.vertices  # Vertices of the hexagons
+
+        # Logarithmic scaling for size values
+        size_values_filtered = np.log1p(
+            size_values_filtered
+        )  # Log scaling to make small sizes smaller
+
+        # Get dynamic upper bound for normalization (based on the max size_value)
+        size_min = np.min(size_values_filtered)
+        size_max = np.max(size_values_filtered)
+
+        # Dynamic upper bound using max_size parameter
+        dynamic_max_size = max_size * scaling_factor
+
+        # Normalize log-transformed size values to the range [min_size, dynamic_max_size]
+        normalized_sizes = (size_values_filtered - size_min) / (size_max - size_min) * (
+            dynamic_max_size - min_size
+        ) + min_size
+
+        patches = []
+        hex_center = np.mean(verts, axis=0)  # Calculate the center of the hexagon
+
+        # Create hexagons with sizes scaled based on the normalized sizes
+        for offset, size in zip(offsets_filtered, normalized_sizes):
+            # Scale the hexagon vertices relative to its center and then apply offset
+            v1 = (verts - hex_center) * size + offset
             path = Path(v1, orgpath.codes)
             patch = PathPatch(path)
             patches.append(patch)
 
-        pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
-        pc.set_array(values)
+        # Use efficiency_values to set color for the hexagons
+        color_values = np.array(efficiency_values_filtered)
+
+        # Create PatchCollection and add to the axis
+        pc = PatchCollection(patches, cmap="RdYlGn", edgecolor="k")
+        pc.set_array(color_values)  # Set color based on efficiency values
         ax.add_collection(pc)
-        hc.remove()
+
+        # Remove the original hexbin collection (optional)
+        if hc in ax.collections:
+            hc.remove()  # Remove safely if it exists in the list of artists
+
+        # Avoid adding multiple colorbars
+        if not hasattr(ax, "_colorbar"):
+            cbar = plt.colorbar(pc, ax=ax, label="Shooting Efficiency")
+            ax._colorbar = cbar
+
+    # Remove the original hexbin collection (but preserve the color array)
 
     def euroleague_field_goal_heatmap(
         self,
@@ -570,6 +850,107 @@ class ShotChart:
         )
 
         plt.colorbar(hc, ax=ax, label="Shooting Efficiency")
+
+        # Draw the court and set limits
+        self.draw_court(ax)
+        ax.set_xlim([-800, 800])
+        ax.set_ylim([-200, 1300])
+
+        ax.set_aspect("equal")
+
+        if title:
+            ax.set_title(
+                title,
+                fontsize=self.config["title"]["fontsize"],
+                fontweight=self.config["title"]["fontweight"],
+                color=self.config["title"]["color"],
+            )
+
+        plt.show()
+
+    def plot_hexbin_with_size_and_color(
+        self,
+        df,
+        offsets_col,
+        efficiency_col,
+        frequency_col,
+        player_name,
+        mincnt=0,
+        title=None,
+        min_size=0.2,
+        max_size=1.0,
+        scaling_factor=0.7,
+    ):
+        """
+        Plot a hexbin where color represents shooting efficiency (0-1) and size represents shot frequency.
+
+        Args:
+        - df: DataFrame containing the relevant data.
+        - offsets_col: The name of the column containing the offsets (x, y).
+        - efficiency_col: The name of the column containing shooting efficiency values (0 to 1).
+        - frequency_col: The name of the column containing frequency values for hexagon size.
+        - player_name: The player's name to filter the data.
+        - mincnt: Minimum count for hexagons.
+        - title: Title for the plot.
+        """
+        fig, ax = plt.subplots(figsize=self.config["figsize"])
+
+        # Extract data for the given player
+        player_data = df[df["player_name"] == player_name]
+
+        # Access the arrays from the DataFrame
+        offsets = player_data[offsets_col].values[
+            0
+        ]  # Assuming offsets are stored as a list of (x, y) tuples
+        efficiency_values = np.array(
+            player_data[efficiency_col].values[0]
+        )  # 0 to 1 values
+        frequency_values = np.array(
+            player_data[frequency_col].values[0]
+        )  # Frequency values for hexagon size
+
+        # Filter zero efficiency values (set to NaN)
+        efficiency_values_filtered = np.copy(efficiency_values)
+        efficiency_values_filtered[efficiency_values_filtered == 0] = np.nan
+        vmax_value = np.nanmax(
+            efficiency_values_filtered
+        )  # Max of non-zero efficiency values
+
+        # Also filter frequency values, setting zero frequencies to NaN
+        frequency_values_filtered = np.copy(frequency_values)
+        # frequency_values_filtered[frequency_values_filtered == 0] = np.nan
+
+        # Plot hexagons with filtered efficiency as color
+        hc = ax.hexbin(
+            offsets[:, 0],
+            offsets[:, 1],
+            gridsize=self.config["gridsize"],
+            edgecolors="none",  # Prevent the edges from drawing
+            linewidths=0,
+            C=efficiency_values_filtered,  # Use filtered efficiency for color
+            extent=self.config["hexagon_extent"],
+            cmap=self.config["cmap"],  # Your colormap
+            mincnt=mincnt,
+            norm=SymLogNorm(linthresh=1e-2, linscale=1, vmin=0.1, vmax=vmax_value),
+        )
+
+        # Remove the original hexbin collection
+        hc.remove()
+
+        # Call the sized_hexbin function to adjust hexagon sizes based on filtered frequency
+        frequency_values_filtered = np.copy(frequency_values)
+        frequency_values_filtered[frequency_values_filtered == 0] = -1
+
+        self.sized_hexbin(
+            hc,
+            ax,
+            offsets=offsets,
+            size_values=frequency_values_filtered,
+            efficiency_values=efficiency_values_filtered,
+            max_size=max_size,
+            min_size=min_size,
+            scaling_factor=scaling_factor,
+        )
 
         # Draw the court and set limits
         self.draw_court(ax)
