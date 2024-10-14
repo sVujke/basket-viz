@@ -47,6 +47,11 @@ class ShotChart:
             },
             "gridsize": 15,
             "cmap": "RdYlGn",
+            "edge_color": "white",
+            "edge_thickness": 2,
+            "player_column_name": "PLAYER",
+            "team_column_name": "TEAM",
+            "entity_type": "player",
         }
 
         if use_team_config and use_team_config in team_configs:
@@ -354,9 +359,9 @@ class ShotChart:
         missed_action_ids = self.config["missed_action_ids"]
 
         if player_name:
-            df = df[df["PLAYER"] == player_name]
+            df = df[df[self.config["player_column_name"]] == player_name]
         if team_name:
-            df = df[df["TEAM"] == team_name]
+            df = df[df[self.config["team_column_name"]] == team_name]
         if game_id:
             df = df[df["GAME_ID"] == game_id]
 
@@ -398,8 +403,6 @@ class ShotChart:
             offsets[:, 0],
             offsets[:, 1],
             gridsize=self.config["gridsize"],
-            # edgecolors=edge_color,  # Set the border color
-            # linewidths=edge_thickness,
             C=np.array(values),
             extent=self.config["hexagon_extent"],
         )
@@ -458,222 +461,6 @@ class ShotChart:
 
         plt.show()
 
-    # def sized_hexbin(self, ax, hc):
-    #         offsets = hc.get_offsets()
-    #         orgpath = hc.get_paths()[0]
-    #         verts = orgpath.vertices
-    #         values = hc.get_array()
-    #         ma = values.max()
-    #         patches = []
-
-    #         for offset, val in zip(offsets, values):
-    #             v1 = verts * val / ma + offset
-    #             path = Path(v1, orgpath.codes)
-    #             patch = PathPatch(path)
-    #             patches.append(patch)
-
-    #         pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
-    #         pc.set_array(values)
-    #         ax.add_collection(pc)
-    #         hc.remove()
-
-    # def sized_hexbin(self, ax, hc, size_values=None, scaling_factor=0.8, min_size=0.1):
-    #     """
-    #     Adjust the size of hexagons based on the provided size_values (e.g., frequency).
-    #     If size_values is None, it will use the values in the hexbin collection (efficiency).
-
-    #     Args:
-    #     - ax: Matplotlib axis object.
-    #     - hc: Hexbin collection.
-    #     - size_values: Array of values used to scale the hexagons. If None, use hc.get_array().
-    #     - scaling_factor: A factor to control the overall scaling of hexagons.
-    #     - min_size: The minimum size of a hexagon (for very low frequency values).
-    #     """
-    #     offsets = hc.get_offsets()  # Hexagon centers
-    #     orgpath = hc.get_paths()[0]  # The original hexagon path
-    #     verts = orgpath.vertices  # Vertices of the hexagons
-
-    #     # Use efficiency values if no custom size_values array is provided
-    #     if size_values is None:
-    #         size_values = hc.get_array()
-
-    #     # Logarithmic scaling for size values
-    #     size_values = np.array(size_values)
-    #     log_size_values = np.log1p(
-    #         size_values
-    #     )  # Log scaling to make small sizes smaller
-
-    #     # Get dynamic upper bound for normalization (based on the max size_value)
-    #     size_min = log_size_values.min()
-    #     size_max = log_size_values.max()
-
-    #     # Instead of a fixed max (1.5), use a dynamic max based on the distribution of size values
-    #     dynamic_max_size = (
-    #         2 * scaling_factor
-    #     )  # Dynamic upper bound (you can adjust the factor)
-
-    #     # Normalize log-transformed size values to the range [min_size, dynamic_max_size]
-    #     normalized_sizes = (log_size_values - size_min) / (size_max - size_min) * (
-    #         dynamic_max_size - min_size
-    #     ) + min_size
-
-    #     patches = []
-
-    #     # Create hexagons with sizes scaled based on the normalized size values
-    #     for offset, size in zip(offsets, normalized_sizes):
-    #         v1 = verts * size + offset  # Scale vertices based on size_values
-    #         print("Offset:", offset)
-    #         print("Size:", size)
-    #         print("Scaled vertices (v1):", v1)
-    #         path = Path(v1, orgpath.codes)
-    #         patch = PathPatch(path)
-    #         patches.append(patch)
-
-    #     # Use the original color array (efficiency) from the hexbin collection to set color
-    #     color_values = hc.get_array()  # This keeps the color tied to efficiency values
-
-    #     # Create PatchCollection and add to the axis
-    #     pc = PatchCollection(patches, cmap=hc.get_cmap(), edgecolor="k")
-    #     pc.set_array(color_values)  # Set color based on original efficiency values
-    #     ax.add_collection(pc)
-
-    #     # Remove the original hexbin collection (but preserve the color array)
-    #     hc.remove()
-
-    # def sized_hexbin(
-    #     self, hc, ax, offsets, size_values, efficiency_values, max_size=1.5
-    # ):
-    #     """
-    #     Adjust the size of hexagons based on the provided size_values (e.g., frequency),
-    #     and color them based on efficiency_values, ensuring the hexagons scale correctly
-    #     without moving their position on the plot.
-
-    #     Args:
-    #     - ax: Matplotlib axis object.
-    #     - offsets: Array of hexagon centers (x, y coordinates) on the plot.
-    #     - size_values: Array of values used to scale the hexagons (e.g., shot frequencies).
-    #     - efficiency_values: Array of values used to color the hexagons (e.g., shooting efficiency).
-    #     - max_size: The maximum hexagon size.
-    #     """
-    #     print("orgpaths")
-    #     orgpath = hc.get_paths()[0]  # Get the original hexagon path
-    #     print("verts")
-
-    #     verts = orgpath.vertices  # Vertices of the hexagons
-
-    #     # Normalize size_values between 0 and max_size
-    #     print("size_values")
-    #     size_values = np.array(size_values)
-    #     size_min = np.min(size_values[size_values > 0])  # Ignore zero frequencies
-    #     size_max = np.max(size_values)
-    #     print(size_min, size_max)
-    #     size_values = size_values[size_values > 0]
-    #     # Normalize sizes to the range [0, 1] and rescale to max_size
-    #     normalized_sizes = (size_values - size_min) / (size_max - size_min)
-    #     scaled_sizes = normalized_sizes * (
-    #         max_size - 0.1
-    #     )  # Scale to desired range [0.1, max_size]
-
-    #     patches = []
-
-    #     # Calculate the center of the hexagon to avoid moving the position
-    #     print("hex_center")
-    #     hex_center = np.mean(verts, axis=0)
-
-    #     # Create hexagons with sizes scaled based on the normalized sizes
-    #     for offset, real_size, size in zip(offsets, size_values, scaled_sizes):
-    #         # Scale the hexagon vertices relative to its center and then apply offset
-    #         print("entered loop")
-    #         v1 = (verts - hex_center) * size + offset
-
-    #         # Print statements for debugging (optional)
-    #         print("Offset:", offset)
-    #         print("Real size:", real_size)
-    #         print("Size:", size)
-    #         print("Hexagon center:", hex_center)
-    #         print("Scaled vertices (v1):", v1)
-
-    #         # Create path and patch
-    #         path = Path(v1, orgpath.codes)
-    #         patch = PathPatch(path)
-    #         patches.append(patch)
-
-    #     # Use efficiency_values to set color for the hexagons
-    #     color_values = np.array(
-    #         efficiency_values
-    #     )  # Ensure efficiency values are in an array
-
-    #     # Create PatchCollection and add to the axis
-    #     pc = PatchCollection(patches, cmap="RdYlGn", edgecolor="k")
-    #     pc.set_array(color_values)  # Set color based on efficiency values
-    #     ax.add_collection(pc)
-
-    #     # Add a colorbar to show efficiency
-    #     plt.colorbar(pc, ax=ax, label="Efficiency")
-
-    # def sized_hexbin(
-    #     self, hc, ax, offsets, size_values, efficiency_values, max_size=1.5
-    # ):
-    #     """
-    #     Adjust the size of hexagons based on the provided size_values (e.g., frequency),
-    #     and color them based on efficiency_values, ensuring the hexagons scale correctly
-    #     without moving their position on the plot.
-
-    #     Args:
-    #     - hc: The original hexbin collection.
-    #     - ax: Matplotlib axis object.
-    #     - offsets: Array of hexagon centers (x, y coordinates) on the plot.
-    #     - size_values: Array of values used to scale the hexagons (e.g., shot frequencies).
-    #     - efficiency_values: Array of values used to color the hexagons (e.g., shooting efficiency).
-    #     - max_size: The maximum hexagon size.
-    #     """
-
-    #     orgpath = hc.get_paths()[0]  # Get the original hexagon path
-    #     verts = orgpath.vertices  # Vertices of the hexagons
-
-    #     # Remove zero size values from size_values and their corresponding offsets and efficiency values
-    #     valid_indices = size_values > 0
-    #     size_values_filtered = size_values[valid_indices]
-    #     offsets_filtered = offsets[valid_indices]
-    #     efficiency_values_filtered = efficiency_values[valid_indices]
-
-    #     # Normalize size_values between 0 and max_size
-    #     size_min = np.min(size_values_filtered)  # After filtering zero frequencies
-    #     size_max = np.max(size_values_filtered)
-
-    #     # Normalize sizes to the range [0, 1] and rescale to max_size
-    #     normalized_sizes = (size_values_filtered - size_min) / (size_max - size_min)
-    #     scaled_sizes = (
-    #         normalized_sizes * (max_size - 0.1) + 0.1
-    #     )  # Scale to range [0.1, max_size]
-
-    #     patches = []
-
-    #     # Calculate the center of the hexagon to avoid moving the position
-    #     hex_center = np.mean(verts, axis=0)
-
-    #     # Create hexagons with sizes scaled based on the normalized sizes
-    #     for offset, size in zip(offsets_filtered, scaled_sizes):
-    #         # Scale the hexagon vertices relative to its center and then apply offset
-    #         v1 = (verts - hex_center) * size + offset
-
-    #         # Create path and patch
-    #         path = Path(v1, orgpath.codes)
-    #         patch = PathPatch(path)
-    #         patches.append(patch)
-
-    #     # Use efficiency_values to set color for the hexagons
-    #     color_values = np.array(
-    #         efficiency_values_filtered
-    #     )  # Ensure efficiency values are in an array
-
-    #     # Create PatchCollection and add to the axis
-    #     pc = PatchCollection(patches, cmap="RdYlGn", edgecolor="k")
-    #     pc.set_array(color_values)  # Set color based on efficiency values
-    #     ax.add_collection(pc)
-
-    #     # Add a colorbar to show efficiency
-    #     plt.colorbar(pc, ax=ax, label="Shooting Efficiency")
     def sized_hexbin(
         self,
         hc,
@@ -742,7 +529,7 @@ class ShotChart:
         color_values = np.array(efficiency_values_filtered)
 
         # Create PatchCollection and add to the axis
-        pc = PatchCollection(patches, cmap="RdYlGn", edgecolor="k")
+        pc = PatchCollection(patches, cmap=self.config["cmap"], edgecolor="k")
         pc.set_array(color_values)  # Set color based on efficiency values
         ax.add_collection(pc)
 
@@ -785,49 +572,12 @@ class ShotChart:
             sized=sized,
         )
 
-    # def _divide_hexbins(self, numerator_hexbin, denominator_hexbin):
-    #     numerator_values = numerator_hexbin.get_array()
-    #     denominator_values = denominator_hexbin.get_array()
-
-    #     # ratio_values = np.divide(
-    #     #     numerator_values,
-    #     #     denominator_values,
-    #     #     out=np.zeros_like(numerator_values),
-    #     #     where=denominator_values != 0,
-    #     # )
-
-    #     print(numerator_hexbin.get_array())
-    #     print(denominator_hexbin.get_array())
-    #     ratio_values = numerator_hexbin.get_array() / denominator_hexbin.get_array()
-
-    #     offsets = denominator_hexbin.get_offsets()
-
-    #     return offsets, ratio_values
-
-    def plot_hexbin_data(self, offsets, values, mincnt=0, title=None):
+    def plot_hexbin(self, offsets, values, mincnt=0, title=None):
         """
         Plot the efficiency using ax.hexbin with data from hexbin_data_with_coords.
         """
-        # Unpack the coordinates and efficiency values
-        # coords, efficiency = zip(*hexbin_data_with_coords)
-        # coords = np.array(coords)  # Convert to numpy array for easier indexing
-        # efficiency = np.array(efficiency)  # Efficiency values
-
         # # Create the plot
         fig, ax = plt.subplots(figsize=self.config["figsize"])
-
-        # # Plot the hexagons using ax.hexbin()
-        # efficiency_hexbin = self.add_hexbin(
-        #     ax, coords=coords, values=efficiency, gridsize=gridsize, cmap=cmap
-        # )
-
-        edge_color = "white"
-        edge_thickness = 2
-
-        # zero_value_indices = np.where(values == 0)[0]
-        # print(
-        #     f"Hexagons with zero values: {zero_value_indices}"
-        # )  # You can store or log this
 
         # # Set hexagons with 0 values to NaN so they won't be plotted
         values_filtered = np.array(values)
@@ -838,15 +588,13 @@ class ShotChart:
             offsets[:, 0],
             offsets[:, 1],
             gridsize=self.config["gridsize"],
-            edgecolors=edge_color,
-            linewidths=edge_thickness,
+            edgecolors=self.config["edge_color"],
+            linewidths=self.config["edge_thickness"],
             C=values_filtered,
             extent=self.config["hexagon_extent"],
             cmap=self.config["cmap"],
             mincnt=mincnt,
-            norm=SymLogNorm(
-                linthresh=1e-2, linscale=1, vmin=0.1, vmax=vmax_value
-            ),  # Adjust thresholds
+            norm=SymLogNorm(linthresh=1e-2, linscale=1, vmin=0.1, vmax=vmax_value),
         )
 
         plt.colorbar(hc, ax=ax, label="Shooting Efficiency")
@@ -868,13 +616,32 @@ class ShotChart:
 
         plt.show()
 
-    def plot_hexbin_with_size_and_color(
+    def plot_entity_hexbin(
+        self, df, offsets_col, color_col, entity_name, mincnt=0, title=None
+    ):
+
+        entity_type = self.config["entity_type"]
+        # Extract data for the chosen entity (player or team)
+        if entity_type == "player":
+            entity_data = df[df["player_name"] == entity_name]
+        elif entity_type == "team":
+            entity_data = df[df["team_name"] == entity_name]
+
+        # Access the arrays from the DataFrame
+        offsets = entity_data[offsets_col].values[
+            0
+        ]  # Assuming offsets are stored as a list of (x, y) tuples
+        color_values = np.array(entity_data[color_col].values[0])  # 0 to 1 values
+
+        self.plot_hexbin(offsets=offsets, values=color_values, mincnt=mincnt)
+
+    def plot_entity_hexbin_sized(
         self,
         df,
         offsets_col,
-        efficiency_col,
-        frequency_col,
-        player_name,
+        color_col,
+        size_col,
+        entity_name,
         mincnt=0,
         title=None,
         min_size=0.2,
@@ -895,30 +662,28 @@ class ShotChart:
         """
         fig, ax = plt.subplots(figsize=self.config["figsize"])
 
-        # Extract data for the given player
-        player_data = df[df["player_name"] == player_name]
+        entity_type = self.config["entity_type"]
+        # Extract data for the chosen entity (player or team)
+        if entity_type == "player":
+            entity_data = df[df["player_name"] == entity_name]
+        elif entity_type == "team":
+            entity_data = df[df["team_name"] == entity_name]
 
         # Access the arrays from the DataFrame
-        offsets = player_data[offsets_col].values[
+        offsets = entity_data[offsets_col].values[
             0
         ]  # Assuming offsets are stored as a list of (x, y) tuples
-        efficiency_values = np.array(
-            player_data[efficiency_col].values[0]
-        )  # 0 to 1 values
-        frequency_values = np.array(
-            player_data[frequency_col].values[0]
+        color_values = np.array(entity_data[color_col].values[0])  # 0 to 1 values
+        size_values = np.array(
+            entity_data[size_col].values[0]
         )  # Frequency values for hexagon size
 
         # Filter zero efficiency values (set to NaN)
-        efficiency_values_filtered = np.copy(efficiency_values)
-        efficiency_values_filtered[efficiency_values_filtered == 0] = np.nan
+        color_values_filtered = np.copy(color_values)
+        color_values_filtered[color_values_filtered == 0] = np.nan
         vmax_value = np.nanmax(
-            efficiency_values_filtered
+            color_values_filtered
         )  # Max of non-zero efficiency values
-
-        # Also filter frequency values, setting zero frequencies to NaN
-        frequency_values_filtered = np.copy(frequency_values)
-        # frequency_values_filtered[frequency_values_filtered == 0] = np.nan
 
         # Plot hexagons with filtered efficiency as color
         hc = ax.hexbin(
@@ -927,7 +692,7 @@ class ShotChart:
             gridsize=self.config["gridsize"],
             edgecolors="none",  # Prevent the edges from drawing
             linewidths=0,
-            C=efficiency_values_filtered,  # Use filtered efficiency for color
+            C=color_values_filtered,  # Use filtered efficiency for color
             extent=self.config["hexagon_extent"],
             cmap=self.config["cmap"],  # Your colormap
             mincnt=mincnt,
@@ -938,15 +703,15 @@ class ShotChart:
         hc.remove()
 
         # Call the sized_hexbin function to adjust hexagon sizes based on filtered frequency
-        frequency_values_filtered = np.copy(frequency_values)
-        frequency_values_filtered[frequency_values_filtered == 0] = -1
+        size_values_filtered = np.copy(size_values)
+        size_values_filtered[size_values_filtered == 0] = -1
 
         self.sized_hexbin(
             hc,
             ax,
             offsets=offsets,
-            size_values=frequency_values_filtered,
-            efficiency_values=efficiency_values_filtered,
+            size_values=size_values_filtered,
+            efficiency_values=color_values_filtered,
             max_size=max_size,
             min_size=min_size,
             scaling_factor=scaling_factor,
@@ -969,31 +734,32 @@ class ShotChart:
 
         plt.show()
 
-    # Combine all steps into a single method for convenience
-
-    def get_player_hexbin_data(self, df, player_name):
+    def get_entity_hexbin_data(self, df, entity_name):
         """
         Filters the dataframe for a specific player and returns a dataframe
         with columns: player_name, offsets, values_made, values_missed, values_all.
         """
         # Filter the dataframe by player name
-        df_player = df[df["PLAYER"] == player_name]
+        entity_type = self.config["entity_type"]
+
+        if entity_type == "player":
+            df_entity = df[df[self.config["player_column_name"]] == entity_name]
+        elif entity_type == "team":
+            df_entity = df[df[self.config["team_column_name"]] == entity_name]
 
         # Separate made and missed shots
-        fg_made, fg_miss = self.get_fg_made_miss(df_player)
+        fg_made, fg_miss = self.get_fg_made_miss(df_entity)
 
         # Get the hexbin offsets and values for made shots
         made_hc = self.get_hexbin_from_data_points(fg_made)
         values_made = made_hc.get_array()
-        offsets_made = made_hc.get_offsets()
 
         # Get the hexbin offsets and values for missed shots
         miss_hc = self.get_hexbin_from_data_points(fg_miss)
         values_missed = miss_hc.get_array()
-        offsets_missed = miss_hc.get_offsets()
 
         # Get the hexbin offsets and values for all shots
-        all_hc = self.get_hexbin_from_data_points(df_player)
+        all_hc = self.get_hexbin_from_data_points(df_entity)
         values_all = all_hc.get_array()
         offsets_all = all_hc.get_offsets()
 
@@ -1005,7 +771,7 @@ class ShotChart:
 
         # Create a dataframe to return
         shot_data = {
-            "player_name": [player_name],
+            f"{entity_type}_name": [entity_name],
             "offsets": [offsets_all],
             "values_made": [values_made],
             "values_missed": [values_missed],
@@ -1019,25 +785,31 @@ class ShotChart:
 
         return result_df
 
-    def get_hexbin_data_for_dataframe(self, df):
+    def get_all_entity_hexbin_data(self, df):
         """
         Processes the shot data for all players and returns a dataframe containing:
-        player_name, offsets, values_made, values_missed, values_all.
+        player_name or team name, offsets, values_made, values_missed, values_all.
         """
-        players = df["PLAYER"].unique()
-        all_players_data = []
+        entity_type = self.config["entity_type"]
 
-        # Loop over each player and get shot data
-        for player_name in players:
-            player_data = self.get_player_hexbin_data(df, player_name)
-            all_players_data.append(player_data)
+        if entity_type == "player":
+            unique_entities = df[self.config["player_column_name"]].unique()
+        elif entity_type == "team":
+            unique_entities = df[self.config["team_column_name"]].unique()
 
-        # Concatenate all the players' data into a single dataframe
-        all_players_df = pd.concat(all_players_data, ignore_index=True)
+        entities_data = []
+
+        # Loop over each player/team and get shot data
+        for entity_name in unique_entities:
+            entity_data = self.get_entity_hexbin_data(df, entity_name)
+            entities_data.append(entity_data)
+
+        # Concatenate all the entities into a single dataframe
+        all_players_df = pd.concat(entities_data, ignore_index=True)
 
         return all_players_df
 
-    def _normalize_totals(self, all_players_df, metric="made"):
+    def _normalize_totals(self, all_entities_df, metric="made"):
         """
         Calculates the totals for all players' values and normalizes the performance
         of each player against the rest of the league.
@@ -1050,22 +822,22 @@ class ShotChart:
             "all": "values_all",
         }
         # Initialize arrays to store totals
-        total_values = np.zeros_like(all_players_df[metrics[metric]].values[0])
-        # total_values_all = np.zeros_like(all_players_df["values_all"].values[0])
+        total_values = np.zeros_like(all_entities_df[metrics[metric]].values[0])
 
         # Calculate the total values across all players
-        for _, row in all_players_df.iterrows():
+        for _, row in all_entities_df.iterrows():
             total_values += row[metrics[metric]]
             # total_values_all += row["values_all"]
 
         # Create a new dataframe to store the normalized values
         normalized_data = []
 
-        for _, row in all_players_df.iterrows():
-            player_name = row["player_name"]
+        entity_type = self.config["entity_type"]
+
+        for _, row in all_entities_df.iterrows():
+            entity_name = row[f"{entity_type}_name"]
             offsets = row["offsets"]
             values = row[metrics[metric]]
-            # values_all = row["values_all"]
 
             # Normalize the player's values by the league totals
             normalized_values = np.divide(
@@ -1074,19 +846,12 @@ class ShotChart:
                 out=np.zeros_like(values),
                 where=total_values != 0,
             )
-            # normalized_values_all = np.divide(
-            #     values_all,
-            #     total_values_all,
-            #     out=np.zeros_like(values_all),
-            #     where=total_values_all != 0,
-            # )
 
             normalized_data.append(
                 {
-                    "player_name": player_name,
+                    f"{entity_type}_name": entity_name,
                     "offsets": offsets,
                     f"normalized_values_{metric}": normalized_values,
-                    # "normalized_values_all": normalized_values_all,
                 }
             )
 
@@ -1095,156 +860,38 @@ class ShotChart:
 
         return normalized_df
 
-    def minmax_scale_normalized_values(self, normalized_df):
+    def _minmax_scale_normalized_values(self, normalized_df, metric="made"):
         """
         Applies Min-Max scaling to normalized values for each hexbin to see who performs the best per bin.
-
         Returns a dataframe with scaled values for each player.
         """
-        # Initialize lists to store scaled values
-        scaled_data = []
-
-        # Retrieve the offsets (bins) from the first player row
-        offsets = normalized_df["offsets"].values[0]
-
         # Initialize MinMaxScaler
         scaler = MinMaxScaler()
 
-        # We will loop over each bin (for each player) and apply Min-Max scaling
-        for bin_idx in range(len(offsets)):
-            # Collect the bin values for all players for 'values_made' and 'values_all'
-            values_made_for_bin = np.array(
-                [
-                    row["normalized_values_made"][bin_idx]
-                    for _, row in normalized_df.iterrows()
-                ]
-            )
-            values_all_for_bin = np.array(
-                [
-                    row["normalized_values_all"][bin_idx]
-                    for _, row in normalized_df.iterrows()
-                ]
-            )
-
-            # Reshape to 2D arrays for scaling
-            values_made_for_bin = values_made_for_bin.reshape(-1, 1)
-            values_all_for_bin = values_all_for_bin.reshape(-1, 1)
-
-            # Scale the values using MinMaxScaler
-            scaled_values_made_for_bin = scaler.fit_transform(
-                values_made_for_bin
-            ).flatten()
-            scaled_values_all_for_bin = scaler.fit_transform(
-                values_all_for_bin
-            ).flatten()
-
-            # Store the scaled values back in a list
-            scaled_data.append(
-                {
-                    "bin_idx": bin_idx,
-                    "scaled_values_made": scaled_values_made_for_bin,
-                    "scaled_values_all": scaled_values_all_for_bin,
-                }
-            )
-
-        # Convert the scaled data into a dataframe
+        # Iterate over each row in the dataframe
         for idx, row in normalized_df.iterrows():
-            player_name = row["player_name"]
-            offsets = row["offsets"]
+            # Extract the values for the given metric (either "made" or others)
+            values = row[f"normalized_values_{metric}"]
 
-            scaled_values_made = np.array(
-                [
-                    scaled_data[bin_idx]["scaled_values_made"][idx]
-                    for bin_idx in range(len(offsets))
-                ]
-            )
-            scaled_values_all = np.array(
-                [
-                    scaled_data[bin_idx]["scaled_values_all"][idx]
-                    for bin_idx in range(len(offsets))
-                ]
-            )
+            # Apply masking if needed (assuming masked arrays are already present)
+            masked_values = np.ma.masked_array(values).compressed()
 
-            normalized_df.at[idx, "scaled_values_made"] = scaled_values_made
-            normalized_df.at[idx, "scaled_values_all"] = scaled_values_all
+            # Reshape the array for scaling
+            masked_values_reshaped = masked_values.reshape(-1, 1)
+
+            # Apply Min-Max scaling
+            scaled_values = scaler.fit_transform(masked_values_reshaped).flatten()
+
+            # Set fill value for masked array
+            np.ma.set_fill_value(values, 0)
+
+            # Put scaled values back in place (ignoring masked elements)
+            values[~values.mask] = scaled_values
+
+            # Update the DataFrame with the scaled values
+            normalized_df.at[idx, f"normalized_values_{metric}"] = values
 
         return normalized_df
-
-    # def plot_shooting_efficiency_heatmap(
-    #     self,
-    #     df,
-    #     player_name=None,
-    #     team_name=None,
-    #     game_id=None,
-    #     title=None,
-    #     gridsize=15,
-    #     custom_cmap=None,
-    # ):
-    #     # Get made and missed field goals
-    #     fg_made, fg_miss = self.get_fg_made_miss(df, player_name, team_name, game_id)
-
-    #     # Concatenate made and missed shots
-    #     shots_df = pd.concat([fg_made.assign(made=1), fg_miss.assign(made=0)])
-
-    #     # Use the same hexbin to calculate both total attempts and made shots
-    #     self.fig, ax = plt.subplots(figsize=self.config["figsize"])
-
-    #     # Create hexbin to count total shots and made shots
-    #     hexbin = ax.hexbin(
-    #         shots_df[self.config["coord_x"]],
-    #         shots_df[self.config["coord_y"]],
-    #         C=shots_df["made"],
-    #         reduce_C_function=np.sum,
-    #         gridsize=gridsize,
-    #         cmap=custom_cmap or plt.cm.viridis,
-    #         extent=self.config["hexagon_extent"],
-    #     )
-
-    #     # Use the "norm" argument to normalize efficiency (shots made / total shots)
-    #     attempts_hexbin = ax.hexbin(
-    #         shots_df[self.config["coord_x"]],
-    #         shots_df[self.config["coord_y"]],
-    #         gridsize=gridsize,
-    #         cmap=plt.cm.gray_r,
-    #         extent=self.config["hexagon_extent"],
-    #         alpha=0.0,  # Invisible plot, just to count total attempts
-    #     )
-
-    #     # Now calculate efficiency
-    #     attempts = attempts_hexbin.get_array()
-    #     made = hexbin.get_array()
-
-    # Avoid division by zero by replacing zeros with a very small number
-    # efficiency = np.divide(
-    #     made, attempts, out=np.zeros_like(made), where=attempts != 0
-    # )
-
-    # # Re-plot with efficiency
-    # efficiency_hexbin = ax.hexbin(
-    #     shots_df[self.config["coord_x"]],
-    #     shots_df[self.config["coord_y"]],
-    #     C=efficiency,
-    #     gridsize=gridsize,
-    #     cmap=custom_cmap or plt.cm.viridis,
-    #     extent=self.config["hexagon_extent"],
-    # )
-
-    # # Add a color bar for shooting efficiency
-    # plt.colorbar(efficiency_hexbin, ax=ax, label="Shooting Efficiency")
-
-    # self.draw_court(ax)
-    # ax.set_xlim([-800, 800])
-    # ax.set_ylim([-200, 1300])
-
-    # if title:
-    #     ax.set_title(
-    #         title,
-    #         fontsize=self.config["title"]["fontsize"],
-    #         fontweight=self.config["title"]["fontweight"],
-    #         color=self.config["title"]["color"],
-    #     )
-
-    # plt.show()
 
 
 # Example usage
