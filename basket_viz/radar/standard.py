@@ -11,6 +11,7 @@ class RadarChart:
     def __init__(self, dataframe, columns, **kwargs):
         self.dataframe = dataframe
         self.columns = columns
+        # self.player_name = player_name
         self.kwargs = kwargs
         self.fig, self.ax = None, None  # To store the figure and axis after plotting
         self.player_images = []
@@ -46,8 +47,14 @@ class RadarChart:
         ax.spines["polar"].set_linewidth(grid_border_linewidth)
         ax.set_facecolor(background_color)
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(self.columns, color=label_color, fontsize=label_fontsize)
+
         ax.tick_params(colors=value_color, labelsize=value_fontsize)
+
+        # Set figure background color if specified
+        figure_bg_color = self.kwargs.get("figure_bg_color", None)
+        if figure_bg_color:
+            self.fig.patch.set_facecolor(figure_bg_color)
+        ax.set_xticklabels(self.columns, color=label_color, fontsize=label_fontsize)
 
         # Set figure background color if specified
         figure_bg_color = self.kwargs.get("figure_bg_color", None)
