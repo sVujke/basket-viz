@@ -49,11 +49,6 @@ class RadarChart:
         ax.set_xticks(angles[:-1])
 
         ax.tick_params(colors=value_color, labelsize=value_fontsize)
-
-        # Set figure background color if specified
-        figure_bg_color = self.kwargs.get("figure_bg_color", None)
-        if figure_bg_color:
-            self.fig.patch.set_facecolor(figure_bg_color)
         ax.set_xticklabels(self.columns, color=label_color, fontsize=label_fontsize)
 
         # Set figure background color if specified
