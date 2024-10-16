@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from basket_viz.img_util.img_patcher import ImagePatcher
 from basket_viz.img_util.img_processor import ImageProcessor
+from basket_viz.export_util.fig_export import LocalExport
 
 
 class RadarChart:
@@ -13,7 +14,11 @@ class RadarChart:
         self.columns = columns
         # self.player_name = player_name
         self.kwargs = kwargs
-        self.fig, self.ax = None, None  # To store the figure and axis after plotting
+        self.fig, self.ax, self.ani = (
+            None,
+            None,
+            None,
+        )  # To store the figure and axis after plotting
         self.player_images = []
         self.figsize = self.kwargs.get("figsize", (12, 10))
 
@@ -248,6 +253,15 @@ class RadarChart:
     def display_chart(self):
         """Display the radar chart and any additional elements (e.g., images)."""
         plt.show()
+
+    def save(self, directory="output", file_name="radar_chart", file_format=None):
+        LocalExport.save_plot(
+            fig=self.fig,
+            ani=self.ani,
+            directory=directory,
+            file_name=file_name,
+            file_format=file_format,
+        )
 
 
 if __name__ == "__main__":
