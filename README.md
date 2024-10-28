@@ -35,6 +35,24 @@ shot_chart.plot_shot_chart(df, player_name="NEDOVIC, NEMANJA")
 
 ![Alt Text](/media/shots.gif)
 
+
+## ⬡ ⬢ Aggergated Shot Charts
+
+```python
+df_all = shot_chart.get_all_entity_hexbin_data(df)
+
+shot_chart.plot_entity_hexbin_sized(
+    df_all,
+    offsets_col='offsets',
+    color_col='values_ratio',
+    size_col='values_all',
+    entity_name=player_name,
+)
+```
+
+![Alt Text](/media/sized_hexbin_shotchart.png)
+
+
 ## 🎢 Overlay 
 This module supports plotting static and animated overlay comparing the performance of individuals against the rest of the league. 
 
