@@ -70,6 +70,30 @@ pt.plot_trajectory_animated(normalized_df, players, colors, v_lines=v_lines, tit
 
 ![Alt Text](/media/scoring_profile.gif)
 
+## 🔴🟡🟢 Stat Grid 
+This module supports plotting stat heatmaps for all players per game.
+
+It also comes with marking capability, to "zoom in" on particular players by highlighting them.
+
+The shape of the values can be square or circle. 
+
+```python
+from basket_viz.stat_grid.season_stats import PlayerStatsHeatmap
+
+ps = PlayerStatsHeatmap()
+
+
+ps.set_params( highlight_params={
+                "backgroundcolor": basconia_red,
+                "fontweight": "bold",
+                "edgecolor": basconia_blue,
+                "lw": 3,
+            })
+ps.plot_stat_heatmap(df_stats, team='BAS', player_bames=['moneke, chima'.upper()], num_games=15, stat=stat)
+```
+
+![Alt Text](/media/statgrid-plus-minus.png)
+
 ## 📈 Relationships 
 
 This module supports plotting relationships between different stats of players int the team. 
