@@ -52,6 +52,56 @@ shot_chart.plot_entity_hexbin_sized(
 
 ![Alt Text](/media/sized_hexbin_shotchart.png)
 
+## 🔊 Radar Charts
+
+The radar charts are the first kind that has layers. First layer being the chart, second being the image layer. 
+
+### Standard Radar
+
+```python
+
+radar_chart = RadarChart(
+    dataframe=df_player_stats,
+    columns=stats
+)
+
+radar_chart.plot_radar(player_name, title_sufix="\n Euroleague 2023/2024")   
+radar_chart.add_player_image(img_path)
+radar_chart.display_chart()
+```
+
+NOTE: The circular image is not mandatory.
+
+![Alt Text](/media/simple-radar.png)
+
+### Comparison Radar 
+
+```python
+radar_chart = RadarChart(
+    dataframe=df_player_stats,
+    columns=stats
+)
+
+player_names = ["Howard, Markus", "James, Mike"]
+colors = [basconia_blue, monaco_gold]
+
+# Plot the radar comparison
+radar_chart.compare_radars(
+    player_names=player_names,
+    line_colors=colors,
+    title="Euroleague 2023/2024 \n SCORRER COMPARISON"
+)
+
+# Add player images after plotting the radars
+radar_chart.add_comparison_images(start_x=0.2, spacing=0.25, y_offset=-0.2)
+
+# Display the chart
+radar_chart.display_chart()
+```
+
+NOTE: The circular images are not mandatory.
+
+![Alt Text](/media/comparison-radar.png)
 
 ## 🎢 Overlay 
 This module supports plotting static and animated overlay comparing the performance of individuals against the rest of the league. 
