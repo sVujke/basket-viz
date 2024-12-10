@@ -1,11 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from basket_viz.export_util.fig_export import LocalExport
 
 
 class Differentials:
     def __init__(self, figsize=(12, 10), **kwargs):
         self.figsize = figsize
         self.kwargs = kwargs
+        self.fig = None
+        self.ani = None
 
         # Default parameters for visual configuration
         self.hline_color = kwargs.get("hline_color", "blue")
@@ -32,7 +35,7 @@ class Differentials:
     ):
         """Plots horizontal lines for the given stat in the DataFrame."""
         # Ensure the figure is created with the given size
-        plt.figure(figsize=self.figsize)
+        self.fig = plt.figure(figsize=self.figsize)
 
         for index, row in df.iterrows():
             plt.hlines(
@@ -67,4 +70,16 @@ class Differentials:
         plt.grid(axis="x", linestyle="--", alpha=0.5)
 
         plt.tight_layout()
+
+    def display_chart(self):
+        """Display the radar chart and any additional elements (e.g., images)."""
         plt.show()
+
+    def save(self, directory="output", file_name="radar_chart", file_format=None):
+        LocalExport.save_plot(
+            fig=self.fig,
+            ani=self.ani,
+            directory=directory,
+            file_name=file_name,
+            file_format=file_format,
+        )
