@@ -1,7 +1,9 @@
 import requests
+import numpy as np
 from PIL import Image
 from io import BytesIO
 from matplotlib import pyplot as plt
+from matplotlib.offsetbox import OffsetImage
 
 
 class ImageProcessor:
@@ -60,3 +62,17 @@ class ImageProcessor:
             print(f"Image saved at: {output_path}")
         else:
             print("No image to save. Please download and crop the image first.")
+
+    def get_image(self):
+        """Return a copy of the currently loaded image."""
+        if self.image:
+            return self.image.copy()
+        return None
+
+    def to_offset_image(self, zoom=0.5):
+        """Convert the current image into an OffsetImage for matplotlib plots."""
+        if not self.image:
+            raise ValueError("No image available. Please download or load an image first.")
+
+        img_array = np.array(self.image)
+        return OffsetImage(img_array, zoom=zoom)
