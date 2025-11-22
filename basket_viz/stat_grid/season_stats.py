@@ -95,6 +95,7 @@ class PlayerStatsHeatmap:
         stat="Points",
         team_logo_url_lst=None,
         show=True,
+        show_labels=True,
     ):
         """
         Plot the heatmap of the specified stat for the players.
@@ -120,6 +121,8 @@ class PlayerStatsHeatmap:
             chaining with :meth:`add_bottom_images`, prefer ``show=False`` and
             call ``plt.show()`` once after the logos are added so the heatmap
             stays visible.
+        show_labels : bool, default True
+            Whether to render the numeric values inside each heatmap cell.
         Returns
         -------
         matplotlib.axes.Axes
@@ -128,6 +131,8 @@ class PlayerStatsHeatmap:
         """
 
         heatmap_data = self._prepare_data(df, team, num_games, stat)
+
+        annot = self.params["annot"] and show_labels
 
         fig, ax = plt.subplots(figsize=self.params["figsize"])
         self.fig = fig
@@ -163,7 +168,7 @@ class PlayerStatsHeatmap:
             # Square mode using seaborn heatmap
             sns.heatmap(
                 heatmap_data,
-                annot=self.params["annot"],
+                annot=annot,
                 cmap=self.params["cmap"],
                 cbar=self.params["cbar"],
                 linewidths=self.params["linewidths"],
@@ -325,7 +330,7 @@ class PlayerStatsHeatmap:
         if self.params["cbar"]:
             plt.colorbar(col, ax=ax)
 
-        if self.params["annot"]:
+        if annot:
             for i in range(len(heatmap_data.index)):
                 for j in range(len(heatmap_data.columns)):
                     if not np.isnan(heatmap_data.iloc[i, j]):
