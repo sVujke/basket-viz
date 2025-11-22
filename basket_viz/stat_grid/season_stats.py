@@ -122,7 +122,7 @@ class PlayerStatsHeatmap:
             call ``plt.show()`` once after the logos are added so the heatmap
             stays visible.
         show_labels : bool, default True
-            Whether to render the numeric values inside each heatmap cell.
+            Whether to display the x-axis label for the plot.
         Returns
         -------
         matplotlib.axes.Axes
@@ -131,8 +131,6 @@ class PlayerStatsHeatmap:
         """
 
         heatmap_data = self._prepare_data(df, team, num_games, stat)
-
-        annot = self.params["annot"] and show_labels
 
         fig, ax = plt.subplots(figsize=self.params["figsize"])
         self.fig = fig
@@ -168,7 +166,7 @@ class PlayerStatsHeatmap:
             # Square mode using seaborn heatmap
             sns.heatmap(
                 heatmap_data,
-                annot=annot,
+                annot=self.params["annot"],
                 cmap=self.params["cmap"],
                 cbar=self.params["cbar"],
                 linewidths=self.params["linewidths"],
@@ -185,9 +183,12 @@ class PlayerStatsHeatmap:
 
         plt.title(**self.params["title_params"])
 
-        plt.xlabel(
-            **self.params["xlabel_title_params"],
-        )
+        if show_labels:
+            plt.xlabel(
+                **self.params["xlabel_title_params"],
+            )
+        else:
+            ax.set_xlabel("")
         plt.ylabel(
             **self.params["ylabel_title_params"],
         )
@@ -330,7 +331,7 @@ class PlayerStatsHeatmap:
         if self.params["cbar"]:
             plt.colorbar(col, ax=ax)
 
-        if annot:
+        if self.params["annot"]:
             for i in range(len(heatmap_data.index)):
                 for j in range(len(heatmap_data.columns)):
                     if not np.isnan(heatmap_data.iloc[i, j]):
