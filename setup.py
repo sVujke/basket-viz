@@ -14,7 +14,7 @@ def read_requirements():
 
 setup(
     name="basket_viz",
-    version="0.2.6",
+    version="0.2.7",
     packages=find_packages(),
     description="A Python library for creating interactive and customizable visualizations of basketball statistics.",
     author="basket-viz",
