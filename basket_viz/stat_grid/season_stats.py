@@ -96,6 +96,7 @@ class PlayerStatsHeatmap:
         team_logo_url_lst=None,
         show=True,
         show_labels=True,
+        show_xticks=True,
     ):
         """
         Plot the heatmap of the specified stat for the players.
@@ -123,6 +124,8 @@ class PlayerStatsHeatmap:
             stays visible.
         show_labels : bool, default True
             Whether to display the x-axis label for the plot.
+        show_xticks : bool, default True
+            Whether to display the x-axis tick labels.
         Returns
         -------
         matplotlib.axes.Axes
@@ -189,6 +192,9 @@ class PlayerStatsHeatmap:
             )
         else:
             ax.set_xlabel("")
+        if not show_xticks:
+            ax.set_xticklabels([])
+            ax.tick_params(axis="x", which="both", length=0, labelbottom=False)
         plt.ylabel(
             **self.params["ylabel_title_params"],
         )
