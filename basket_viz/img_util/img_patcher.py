@@ -1,6 +1,9 @@
-from PIL import Image, ImageDraw
+from io import BytesIO
+
 import numpy as np
-from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import requests
+from PIL import Image, ImageDraw
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 
 
 class ImagePatcher:
@@ -123,3 +126,84 @@ class ImagePatcher:
                 color=text_color,
                 transform=ax.transAxes,
             )
+
+
+def fetch_logo_image(url, timeout=10):
+    """Download an image from a URL and return it as a ``PIL.Image``.
+
+    Parameters
+    ----------
+    url : str
+        Remote image URL.
+    timeout : int, optional
+        Request timeout in seconds.
+
+    Returns
+    -------
+    PIL.Image.Image
+        The downloaded image converted to RGBA.
+    """
+
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
+    return Image.open(BytesIO(response.content)).convert("RGBA")
+
+
+class InlineImagePatcher:
+    """Convenience helper for patching in-memory images onto matplotlib axes."""
+
+    def __init__(self, pil_img, img_size=(300, 300)):
+        self.img = pil_img.convert("RGBA").resize(img_size, Image.LANCZOS)
+
+    def create_circular_mask(self):
+        """Apply a circular alpha mask to the current image."""
+
+        mask = Image.new("L", self.img.size, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + self.img.size, fill=255)
+        self.img.putalpha(mask)
+
+    def to_offset_image(self, zoom=0.5):
+        """Convert the masked image to an ``OffsetImage``."""
+
+        return OffsetImage(np.array(self.img), zoom=zoom)
+
+    def add_circular_image(self, ax, position, zoom=0.5):
+        """Draw the image onto ``ax`` at ``position`` using axis fractions."""
+
+        self.create_circular_mask()
+        offset_image = self.to_offset_image(zoom=zoom)
+        ab = AnnotationBbox(
+            offset_image,
+            position,
+            frameon=False,
+            xycoords="axes fraction",
+            boxcoords="axes fraction",
+            pad=0,
+        )
+        ax.add_artist(ab)
+
+
+def render_bottom_images(ax, image_urls, logo_zoom=0.12, y_offset=-0.08, img_size=(260, 260)):
+    """Render a horizontal row of circular images beneath the x-axis.
+
+    This helper is designed for stat grids but can be reused anywhere a row of
+    logos needs to be positioned under a matplotlib axis without a background.
+    Images are downloaded, cropped into circles, and drawn in axis-fraction
+    coordinates, so they stay aligned even if limits or scales change.
+    """
+
+    if not image_urls:
+        return
+
+    n_images = len(image_urls)
+    for idx, url in enumerate(image_urls):
+        try:
+            pil_img = fetch_logo_image(url)
+            patcher = InlineImagePatcher(pil_img, img_size=img_size)
+            x_position = (idx + 0.5) / n_images
+            patcher.add_circular_image(
+                ax=ax, position=(x_position, y_offset), zoom=logo_zoom
+            )
+        except Exception as exc:  # pragma: no cover - non-critical rendering aid
+            print(f"⚠️ failed to render bottom image {url}: {exc}")
