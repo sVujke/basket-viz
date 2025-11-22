@@ -157,16 +157,20 @@ class InlineImagePatcher:
 
     def create_circular_mask(self):
         """Apply a circular alpha mask to the current image."""
-
+        # Create circular mask
         mask = Image.new("L", self.img.size, 0)
         draw = ImageDraw.Draw(mask)
         draw.ellipse((0, 0) + self.img.size, fill=255)
-        self.img.putalpha(mask)
+
+        # Paste the image onto a transparent canvas using the circular mask
+        transparent_bg = Image.new("RGBA", self.img.size, (0, 0, 0, 0))
+        transparent_bg.paste(self.img, (0, 0), mask=mask)
+        self.img = transparent_bg
 
     def to_offset_image(self, zoom=0.5):
         """Convert the masked image to an ``OffsetImage``."""
+        return OffsetImage(np.asarray(self.img), zoom=zoom)
 
-        return OffsetImage(np.array(self.img), zoom=zoom)
 
     def add_circular_image(self, ax, position, zoom=0.5):
         """Draw the image onto ``ax`` at ``position`` using axis fractions."""

@@ -43,6 +43,11 @@ class PlayerStatsHeatmap:
             },
             "ylabel_params": {"fontsize": 14, "rotation": 0, "color": "black"},
             "ylabel_title_params": {"ylabel": "Players", "fontsize": 14},
+            "bottom_logo_params": {
+                "logo_zoom": 0.12,
+                "y_offset": -0.08,
+                "img_size": (260, 260),
+            },
             "columns": {  # Added config for column names
                 "team": "Team",
                 "player": "Player",
@@ -56,6 +61,7 @@ class PlayerStatsHeatmap:
             self.params.update(config)
 
         self.fig = None
+        self.ax = None
 
     def get_params(self):
         """
@@ -80,7 +86,16 @@ class PlayerStatsHeatmap:
         """
         self.params.update(kwargs)
 
-    def plot_stat_heatmap(self, df, team, player_names, num_games=None, stat="Points"):
+    def plot_stat_heatmap(
+        self,
+        df,
+        team,
+        player_names,
+        num_games=None,
+        stat="Points",
+        team_logo_url_lst=None,
+        show=True,
+    ):
         """
         Plot the heatmap of the specified stat for the players.
         Parameters
@@ -95,16 +110,28 @@ class PlayerStatsHeatmap:
             The number of games to consider.
         stat : str, default "Points"
             The stat to plot.
+        team_logo_url_lst : list[str] | None, default None
+            Optional list of logo URLs aligned to the x-axis order. When
+            provided, logos are rendered beneath the stat grid without
+            background fill.
+        show : bool, default True
+            Whether to call ``plt.show()``. Set to ``False`` when you need to
+            add more elements (e.g., additional images) before rendering. When
+            chaining with :meth:`add_bottom_images`, prefer ``show=False`` and
+            call ``plt.show()`` once after the logos are added so the heatmap
+            stays visible.
         Returns
         -------
-        heatmap_data : pd.DataFrame
-            The DataFrame containing the heatmap data.
+        matplotlib.axes.Axes
+            The axis containing the rendered heatmap so callers can append
+            additional elements before display.
         """
 
         heatmap_data = self._prepare_data(df, team, num_games, stat)
 
-        self.fig = plt.figure(figsize=self.params["figsize"])
-        ax = plt.gca()
+        fig, ax = plt.subplots(figsize=self.params["figsize"])
+        self.fig = fig
+        self.ax = ax
 
         if self.params["shape"] == "circle":
 
@@ -159,7 +186,13 @@ class PlayerStatsHeatmap:
         plt.ylabel(
             **self.params["ylabel_title_params"],
         )
-        plt.show()
+
+        self._render_bottom_logos(ax, heatmap_data, team_logo_url_lst)
+
+        if show:
+            plt.show()
+
+        return ax
 
     def _prepare_data(self, df, team, num_games, stat):
         """
@@ -359,14 +392,21 @@ class PlayerStatsHeatmap:
                 )
 
     def add_bottom_images(
-        self, ax, image_urls, logo_zoom=0.12, y_offset=-0.08, img_size=(260, 260)
+        self,
+        ax=None,
+        image_urls=None,
+        logo_zoom=0.12,
+        y_offset=-0.08,
+        img_size=(260, 260),
     ):
         """Render a horizontal strip of circular images below the x-axis.
 
         Parameters
         ----------
-        ax : matplotlib.axes.Axes
-            The axis that owns the stat grid.
+        ax : matplotlib.axes.Axes, optional
+            The axis that owns the stat grid. Defaults to the last plotted
+            heatmap axis on this instance.
+
         image_urls : list[str]
             Ordered list of image URLs to align with x-axis categories.
         logo_zoom : float, optional
@@ -377,6 +417,11 @@ class PlayerStatsHeatmap:
         img_size : tuple[int, int], optional
             Base size used before scaling logos into circles.
         """
+        if ax is None:
+            if self.ax is None:
+                raise ValueError("No axis available; call plot_stat_heatmap first.")
+            ax = self.ax
+
 
         render_bottom_images(
             ax,
@@ -385,6 +430,30 @@ class PlayerStatsHeatmap:
             y_offset=y_offset,
             img_size=img_size,
         )
+
+    def _render_bottom_logos(self, ax, heatmap_data, team_logo_url_lst):
+        """Render bottom logos when provided and aligned to the x-axis."""
+
+        if not team_logo_url_lst:
+            return
+
+        expected = len(heatmap_data.columns)
+        if len(team_logo_url_lst) != expected:
+            print(
+                "⚠️ team_logo_url_lst length does not match number of games;"
+                " skipping logo rendering."
+            )
+            return
+
+        params = self.params["bottom_logo_params"]
+        self.add_bottom_images(
+            ax,
+            team_logo_url_lst,
+            logo_zoom=params.get("logo_zoom", 0.12),
+            y_offset=params.get("y_offset", -0.08),
+            img_size=params.get("img_size", (260, 260)),
+        )
+
 
     def save_plot(self, directory="output", file_name="plot", file_format=None):
         """
