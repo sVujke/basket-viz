@@ -116,7 +116,10 @@ class PlayerStatsHeatmap:
             background fill.
         show : bool, default True
             Whether to call ``plt.show()``. Set to ``False`` when you need to
-            add more elements (e.g., additional images) before rendering.
+            add more elements (e.g., additional images) before rendering. When
+            chaining with :meth:`add_bottom_images`, prefer ``show=False`` and
+            call ``plt.show()`` once after the logos are added so the heatmap
+            stays visible.
         Returns
         -------
         matplotlib.axes.Axes
@@ -126,8 +129,8 @@ class PlayerStatsHeatmap:
 
         heatmap_data = self._prepare_data(df, team, num_games, stat)
 
-        self.fig = plt.figure(figsize=self.params["figsize"])
-        ax = plt.gca()
+        fig, ax = plt.subplots(figsize=self.params["figsize"])
+        self.fig = fig
         self.ax = ax
 
         if self.params["shape"] == "circle":

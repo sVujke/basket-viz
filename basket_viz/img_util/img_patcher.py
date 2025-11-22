@@ -169,9 +169,10 @@ class InlineImagePatcher:
 
     def to_offset_image(self, zoom=0.5):
         """Convert the masked image to an ``OffsetImage``."""
-        # ``OffsetImage`` can take a PIL image directly, preserving the alpha
-        # channel so the patched logos render without a black background.
-        return OffsetImage(self.img, zoom=zoom)
+        # Feed RGBA numpy data to OffsetImage to guarantee the alpha channel is
+        # respected and avoid any fallback conversions that could introduce a
+        # black background.
+        return OffsetImage(np.asarray(self.img), zoom=zoom)
 
     def add_circular_image(self, ax, position, zoom=0.5):
         """Draw the image onto ``ax`` at ``position`` using axis fractions."""
