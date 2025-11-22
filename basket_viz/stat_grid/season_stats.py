@@ -406,6 +406,7 @@ class PlayerStatsHeatmap:
         ax : matplotlib.axes.Axes, optional
             The axis that owns the stat grid. Defaults to the last plotted
             heatmap axis on this instance.
+
         image_urls : list[str]
             Ordered list of image URLs to align with x-axis categories.
         logo_zoom : float, optional
@@ -420,6 +421,7 @@ class PlayerStatsHeatmap:
             if self.ax is None:
                 raise ValueError("No axis available; call plot_stat_heatmap first.")
             ax = self.ax
+
 
         render_bottom_images(
             ax,
@@ -451,6 +453,7 @@ class PlayerStatsHeatmap:
             y_offset=params.get("y_offset", -0.08),
             img_size=params.get("img_size", (260, 260)),
         )
+
 
     def save_plot(self, directory="output", file_name="plot", file_format=None):
         """
