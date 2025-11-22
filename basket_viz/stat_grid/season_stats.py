@@ -6,6 +6,8 @@ import os
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import Normalize
 
+from basket_viz.img_util import render_bottom_images
+
 
 class PlayerStatsHeatmap:
     def __init__(self, config=None):
@@ -355,6 +357,34 @@ class PlayerStatsHeatmap:
                         lw=self.params["highlight_params"]["lw"],
                     )
                 )
+
+    def add_bottom_images(
+        self, ax, image_urls, logo_zoom=0.12, y_offset=-0.08, img_size=(260, 260)
+    ):
+        """Render a horizontal strip of circular images below the x-axis.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The axis that owns the stat grid.
+        image_urls : list[str]
+            Ordered list of image URLs to align with x-axis categories.
+        logo_zoom : float, optional
+            Zoom factor for each image; smaller values produce smaller logos.
+        y_offset : float, optional
+            Vertical offset in axis-fraction coordinates. Negative values place
+            images below the x-axis while keeping them anchored to the plot.
+        img_size : tuple[int, int], optional
+            Base size used before scaling logos into circles.
+        """
+
+        render_bottom_images(
+            ax,
+            image_urls,
+            logo_zoom=logo_zoom,
+            y_offset=y_offset,
+            img_size=img_size,
+        )
 
     def save_plot(self, directory="output", file_name="plot", file_format=None):
         """
